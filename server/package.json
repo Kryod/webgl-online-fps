@@ -1,0 +1,20 @@
+{
+  "name": "ouaibe-gleu-rezo-server",
+  "version": "1.0.0",
+  "description": "Ouaibe-Gleu/Rezo Server",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kryod/ouaibe-gleu-rezo.git"
+  },
+  "author": "Axel Cocat, Yohann Jerrain",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Kryod/ouaibe-gleu-rezo/issues"
+  },
+  "homepage": "https://github.com/Kryod/ouaibe-gleu-rezo#readme"
+}
