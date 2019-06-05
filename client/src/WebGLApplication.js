@@ -1,17 +1,20 @@
-import * as THREE from "../libs/three.module.js";
-
 class WebGLApplication {
     constructor(containerElement, update) {
         const { clientWidth, clientHeight } = containerElement;
         this._scene = new THREE.Scene();
-        this._camera = new THREE.PerspectiveCamera(45, clientWidth / clientHeight, 0.1, 1000);
-        this._renderer = new THREE.WebGLRenderer({
-            "antialias": true,
-        });
+
+        this._camera = new THREE.PerspectiveCamera(30, clientWidth / clientHeight, 1.0, 5000.0);
+
+        this._renderer = new THREE.WebGLRenderer();
         this._renderer.shadowMap.enabled = true;
         this._renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this._renderer.setPixelRatio(window.devicePixelRatio);
         this._renderer.setSize(clientWidth, clientHeight);
+        this._renderer.gammaInput = true;
+        this._renderer.gammaOutput = true;
+        this._renderer.shadowMap.enabled = true;
         containerElement.appendChild(this._renderer.domElement);
+
         this._update = update;
         this._clock = new THREE.Clock();
     }
