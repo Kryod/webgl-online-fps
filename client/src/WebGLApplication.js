@@ -1,25 +1,19 @@
-import {
-    Scene,
-    PerspectiveCamera,
-    WebGLRenderer,
-    PCFSoftShadowMap,
-    Clock,
-} from "../libs/three.module.js";
+import * as THREE from "../libs/three.module.js";
 
 class WebGLApplication {
     constructor(containerElement, update) {
         const { clientWidth, clientHeight } = containerElement;
-        this._scene = new Scene();
-        this._camera = new PerspectiveCamera(45, clientWidth / clientHeight, 0.1, 1000);
-        this._renderer = new WebGLRenderer({
+        this._scene = new THREE.Scene();
+        this._camera = new THREE.PerspectiveCamera(45, clientWidth / clientHeight, 0.1, 1000);
+        this._renderer = new THREE.WebGLRenderer({
             "antialias": true,
         });
         this._renderer.shadowMap.enabled = true;
-        this._renderer.shadowMap.type = PCFSoftShadowMap;
+        this._renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this._renderer.setSize(clientWidth, clientHeight);
         containerElement.appendChild(this._renderer.domElement);
         this._update = update;
-        this._clock = new Clock();
+        this._clock = new THREE.Clock();
     }
 
     get scene() {
