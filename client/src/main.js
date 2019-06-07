@@ -1,9 +1,7 @@
 import WebGLApplication from "./WebGLApplication.js";
 
 var webglElement = document.getElementById("webgl");
-const app = new WebGLApplication(webglElement, ({ scene }, dt) => {
-    scene.getObjectByName("Cube").rotation.y += 2 * dt; // TODO: find something more optimized than "getObjectByName" on each update?
-});
+const app = new WebGLApplication(webglElement, update);
 const { scene, camera } = app;
 
 // Scene setup
@@ -48,11 +46,13 @@ dirLight.castShadow = true;
 dirLight.shadow.mapSize.width = 2048;
 dirLight.shadow.mapSize.height = 2048;
 
-var d = 50;
-dirLight.shadow.camera.left = -d;
-dirLight.shadow.camera.right = d;
-dirLight.shadow.camera.top = d;
-dirLight.shadow.camera.bottom = -d;
+{
+    var d = 50;
+    dirLight.shadow.camera.left = -d;
+    dirLight.shadow.camera.right = d;
+    dirLight.shadow.camera.top = d;
+    dirLight.shadow.camera.bottom = -d;
+}
 
 // Sky
 var vertexShader = document.getElementById("vertexShader").textContent;
@@ -88,3 +88,7 @@ camera.position.set(0, -28, 25);
 camera.lookAt(cube.position);
 
 app.start();
+
+function update({ scene }, dt) {
+    cube.rotation.y += 2 * dt;
+}
