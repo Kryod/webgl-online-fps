@@ -1,30 +1,37 @@
-class WebGLApplication {
-    constructor(containerElement, update) {
-        const { clientWidth, clientHeight } = containerElement;
-        this._scene = new THREE.Scene();
+import InputManager from "./InputManager.js";
 
-        this._camera = new THREE.PerspectiveCamera(30, clientWidth / clientHeight, 1.0, 5000.0);
+class WebGLApplication {
+    constructor(containerElement) {
+        this._storedWidth = containerElement.clientWidth;
+        this._storedHeight = containerElement.clientHeight;
 
         this._renderer = new THREE.WebGLRenderer();
         this._renderer.shadowMap.enabled = true;
         this._renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this._renderer.setPixelRatio(window.devicePixelRatio);
-        this._renderer.setSize(clientWidth, clientHeight);
+        this._renderer.setSize(this._storedWidth, this._storedHeight);
         this._renderer.gammaInput = true;
         this._renderer.gammaOutput = true;
         this._renderer.shadowMap.enabled = true;
         containerElement.appendChild(this._renderer.domElement);
 
-        this._update = update;
         this._clock = new THREE.Clock();
     }
 
-    get scene() {
-        return this._scene;
+    get clientWidth() {
+        return this._storedWidth;
     }
 
-    get camera() {
-        return this._camera;
+    get clientHeight() {
+        return this._storedHeight;
+    }
+
+    set activeScene(scene) {
+        this._activeScene = scene;
+    }
+
+    set update(f) {
+        this._update = f;
     }
 
     start() {
@@ -50,10 +57,13 @@ class WebGLApplication {
         this._checkDimensions();
 
         if (this._update !== undefined) {
-            this._update(this, dt);
+            this._update(dt);
         }
+        InputManager.update();
 
-        this._renderer.render(this.scene, this._camera);
+        if (this._activeScene !== undefined && this._activeScene.camera !== undefined) {
+            this._renderer.render(this._activeScene, this._activeScene.camera);
+        }
         this._rafId = requestAnimationFrame(() => {
             this.animate();
         });
@@ -66,8 +76,9 @@ class WebGLApplication {
             this._storedWidth = clientWidth;
             this._storedHeight = clientHeight;
             this._renderer.setSize(clientWidth, clientHeight);
-            this._camera.aspect = clientWidth / clientHeight;
-            this._camera.updateProjectionMatrix();
+            if (this._activeScene !== undefined) {
+                this._activeScene.onClientResized(clientWidth, clientHeight);
+            }
         }
     }
 }

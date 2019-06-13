@@ -2,35 +2,15 @@
 <html>
 
 <head>
-    <title>WebGL</title>
-
-    <style type="text/css">
-        body,
-        html,
-        #webgl {
-            margin: 0px;
-            padding: 0px;
-            width: 100%;
-            height: 100%;
-        }
-
-        canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        body {
-            background-color: #212121;
-        }
-    </style>
+    <meta charset="utf-8"/>
+    <title>Projet WebGL</title>
 
     <script type="x-shader/x-vertex" id="vertexShader">
         varying vec3 vWorldPosition;
         void main() {
-            vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
+            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
             vWorldPosition = worldPosition.xyz;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
     </script>
 
@@ -41,15 +21,30 @@
         uniform float exponent;
         varying vec3 vWorldPosition;
         void main() {
-            float h = normalize( vWorldPosition + offset ).y;
-            gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( max( h , 0.0), exponent ), 0.0 ) ), 1.0 );
+            float h = normalize(vWorldPosition + offset).y;
+            gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h , 0.0), exponent), 0.0)), 1.0);
         }
     </script>
 
+    <link href="https://fonts.googleapis.com/css?family=Lato&display=swap" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+
+    <script type="application/javascript" src="libs/jquery-3.4.1.min.js"></script>
+    <script type="application/javascript" src="libs/inflate.min.js"></script>
     <script type="application/javascript" src="libs/three.min.js"></script>
 </head>
 
 <body>
+    <div id="overlay">
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+            <div class="percentage">0%</div>
+            <div class="count-container">
+                <span class="count"></span>
+            </div>
+        </div>
+    </div>
+
     <div id="webgl"></div>
     <script type="module" src="src/main.js"></script>
 </body>

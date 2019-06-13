@@ -2,9 +2,9 @@
   "name": "ouaibe-gleu-rezo-server",
   "version": "1.0.0",
   "description": "Ouaibe-Gleu/Rezo Server",
-  "main": "main.js",
+  "main": "src/main.js",
   "scripts": {
-    "start": "node main.js",
+    "start": "node src/main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

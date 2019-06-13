@@ -1,0 +1,64 @@
+body,
+html,
+#webgl {
+    margin: 0px;
+    padding: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+body {
+    background-color: #212121;
+}
+
+#overlay {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    color: #EFEFEF;
+    font-family: 'Lato', sans-serif;
+}
+
+#progress-container {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 50%;
+    height: 48px;
+    background-color: #333333;
+}
+
+#progress-container .percentage {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(0%, -50%);
+}
+
+#progress-container .count-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    text-align: right;
+}
+#progress-container .count-container .count {
+    position: absolute;
+    width: 64px;
+    top: 120%;
+    transform: translate(-100%, 0%);
+}
+
+#progress-bar {
+    position: absolute;
+    width: 0%;
+    height: 100%;
+    background-color: #2BB52D;
+    transition: width 0.5s ease;
+}
