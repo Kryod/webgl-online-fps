@@ -28,6 +28,8 @@ export default class LoadingScreenScene extends Scene {
         LoaderManager.queueTexture("./assets/models/soldier/soldier_NM.jpg");
         LoaderManager.queueTexture("./assets/models/soldier/soldier_rough.jpg");
         LoaderManager.queueTexture("./assets/models/soldier/soldier_metalness.jpg");
+        LoaderManager.queueFile("./assets/shaders/sky/fragment.glsl");
+        LoaderManager.queueFile("./assets/shaders/sky/vertex.glsl");
 
         LoaderManager.startLoading();
     }

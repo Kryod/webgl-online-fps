@@ -1,4 +1,5 @@
 import Scene from "./Scene.js";
+import LoaderManager from "../LoaderManager.js";
 
 // Behaviours
 import Cube from "../behaviours/Cube.js";
@@ -47,8 +48,6 @@ export default class MainScene extends Scene {
     }
 
     setupSky() {
-        var vertexShader = $("#vertexShader").text();
-        var fragmentShader = $("#fragmentShader").text();
         var uniforms = {
             "topColor": {
                 "value": new THREE.Color(0x0077FF)
@@ -68,8 +67,8 @@ export default class MainScene extends Scene {
         var skyGeo = new THREE.SphereBufferGeometry(200, 32, 15);
         var skyMat = new THREE.ShaderMaterial({
             "uniforms": uniforms,
-            "vertexShader": vertexShader,
-            "fragmentShader": fragmentShader,
+            "vertexShader": LoaderManager.get("sky/vertex.glsl"),
+            "fragmentShader": LoaderManager.get("sky/fragment.glsl"),
             "side": THREE.BackSide
         });
         var sky = new THREE.Mesh(skyGeo, skyMat);

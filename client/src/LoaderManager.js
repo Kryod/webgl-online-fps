@@ -4,6 +4,7 @@ import * as GLTFLoader from "../libs/loaders/GLTFLoader.js";
 const gltfLoader = new THREE.GLTFLoader();
 const fbxLoader = new THREE.FBXLoader();
 const textureLoader = new THREE.TextureLoader();
+const fileLoader = new THREE.FileLoader();
 
 var queue = [];
 var loaded = {};
@@ -20,7 +21,18 @@ function fileProgress(percentage) {
 
 export default {
     get(name) {
-        return loaded[name];
+        if (loaded.hasOwnProperty(name)) {
+            return loaded[name].data;
+        }
+
+        for (var key in loaded) {
+            var path = loaded[key].path;
+            if (path.endsWith(name)) {
+                return loaded[key].data;
+            }
+        }
+
+        console.warn(`Could not get loaded asset for "${name}".`);
     },
 
     set onTotalProgressCallback(callback) {
@@ -52,6 +64,13 @@ export default {
         });
     },
 
+    queueFile(path) {
+        queue.push({
+            "path": path,
+            "loader": fileLoader,
+        });
+    },
+
     startLoading() {
         currentFileIndex = 0;
         this.load();
@@ -70,7 +89,10 @@ export default {
 
         loader.load(path, function(result) {
             var fileName = path.replace(/^.*[\\\/]/, "");
-            loaded[fileName] = result;
+            loaded[fileName] = {
+                "path": path,
+                "data": result,
+            };
             currentFileIndex++;
             _this.load();
         }, function(xhr) {

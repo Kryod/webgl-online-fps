@@ -67,7 +67,6 @@ export default class CharacterController extends Behaviour {
 
         this.euler.setFromQuaternion(this.object.quaternion);
         mov = InputManager.mouseMovement();
-        console.log(mov);
         this.euler.y -= mov.x * this.cameraSensitivity;
         this.euler.x -= mov.y * this.cameraSensitivity;
         this.euler.x = Math.max(-this.cameraMaxAngle, Math.min(this.cameraMaxAngle, this.euler.x));
