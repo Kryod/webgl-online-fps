@@ -10,7 +10,6 @@ export default class CharacterController extends Behaviour {
     }
 
     start() {
-        this.movementSpeed = 10.0;
         this.cameraSensitivity = 0.002;
         this.cameraMaxAngle = Math.PI / 3.0;
         this.pointerLocked = false;
@@ -40,24 +39,19 @@ export default class CharacterController extends Behaviour {
             return;
         }
 
-        /*var mov = new THREE.Vector3();
+        this.movement = new THREE.Vector3();
         if (InputManager.getKey('z') || InputManager.getKey('w')) {
-            mov.z -= 1.0;
+            this.movement.z -= 1.0;
         }
         if (InputManager.getKey('s')) {
-            mov.z += 1.0;
+            this.movement.z += 1.0;
         }
         if (InputManager.getKey('q') || InputManager.getKey('a')) {
-            mov.x -= 1.0;
+            this.movement.x -= 1.0;
         }
         if (InputManager.getKey('d')) {
-            mov.x += 1.0;
+            this.movement.x += 1.0;
         }
-        mov.normalize();
-        mov.multiplyScalar(dt * this.movementSpeed);
-        this.object.translateX(mov.x);
-        this.object.translateZ(mov.z);
-        this.object.position.y = 1.75;*/
 
         this.euler.setFromQuaternion(this.object.quaternion);
         var mouseMov = InputManager.mouseMovement();
@@ -72,6 +66,10 @@ export default class CharacterController extends Behaviour {
             return this.object.position;
         }
 
-        this.object.position.set(val.x, val.y, val.z);
+        if (Array.isArray(val)) {
+            this.object.position.set(val[0], val[1], val[2]);
+        } else {
+            this.object.position.set(val.x, val.y, val.z);
+        }
     }
 }

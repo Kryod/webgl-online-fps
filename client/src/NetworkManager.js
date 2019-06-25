@@ -30,5 +30,9 @@ export default {
         }
 
         return socket.id;
-    }
+    },
+
+    send(event, data) {
+        socket.emit(event, data);
+    },
 }

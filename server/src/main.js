@@ -1,37 +1,76 @@
 const server = require("http").createServer();
 const io = require("socket.io")(server);
+const maths = require("math.gl");
 
-players = {};
+var state = {
+    "players": {},
+};
 
 io.on("connection", client => {
     client.data = {
-        "position": { "x": -10, "y": 1.75, "z": 5 },
+        "position": new maths.Vector3(0, 1.75, 25),
     };
-    players[client.id] = client;
+    state.players[client.id] = client;
+
+    client.on("input", data => {
+        var mov = new maths.Vector3(data.mov);
+        mov.normalize();
+        client.data.movement = mov;
+
+        client.data.rotation = data.rot;
+    });
 
     client.on("disconnect", () => {
-        delete players[client.id];
+        delete state.players[client.id];
     });
 });
 
+var lastUpdate = Date.now();
 function mainLoop() {
-    var state = {
-        "players": {},
-    };
+    var now = Date.now();
+    var dt = (now - lastUpdate) / 1000.0;
+    lastUpdate = now;
 
-    for (var key in players) {
-        if (!players.hasOwnProperty(key)) {
+    for (var key in state.players) {
+        if (!state.players.hasOwnProperty(key)) {
             continue;
         }
 
-        var player = players[key];
+        var player = state.players[key];
 
-        state.players[player.id] = {
-            "pos": player.data.position,
+        if (player.data.movement != null) {
+            var mov = new maths.Vector3(player.data.movement);
+            mov.scale(10.0);
+            mov.scale(dt);
+
+            mov = new maths.Vector3([mov.x, mov.z, 0]);
+            mov.rotateZ({
+                "radians": player.data.rotation,
+            });
+            player.data.position.x += mov.x;
+            player.data.position.z += mov.y;
+        }
+    }
+
+    io.emit("state",  stripState());
+}
+
+function stripState() {
+    var stripped = {
+        "players": {},
+    };
+
+    for (var key in state.players) {
+        if (!state.players.hasOwnProperty(key)) {
+            continue;
+        }
+
+        stripped.players[key] = {
+            "pos": state.players[key].data.position,
         };
     }
 
-    io.emit("state", state);
+    return stripped;
 }
 
 var host = "0.0.0.0";
