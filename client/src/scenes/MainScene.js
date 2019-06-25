@@ -1,4 +1,5 @@
 import Scene from "./Scene.js";
+import InputManager from "../InputManager.js";
 import LoaderManager from "../LoaderManager.js";
 
 // Behaviours
@@ -16,8 +17,13 @@ export default class MainScene extends Scene {
         this.test();
         this.setupCamera();
         this.spawnGround();
-        this.spawnPlayer(app._renderer.domElement);
+        this.spawnPlayer();
         this.setupNetwork();
+    }
+
+    start() {
+        super.start();
+        InputManager.showPauseOverlay();
     }
 
     setupScene() {
@@ -97,8 +103,8 @@ export default class MainScene extends Scene {
         this.cube = new Cube(this, 3.0);
     }
 
-    spawnPlayer(domElement) {
-        this.characterController = new CharacterController(this, domElement, this.camera);
+    spawnPlayer() {
+        this.characterController = new CharacterController(this, this.camera);
     }
 
     setupNetwork() {

@@ -13,14 +13,28 @@ export default class LoadingScreenScene extends Scene {
         this.$progressBar = $("#progress-bar");
         this.$progressPercentage = $("#progress-container .percentage");
         this.$progressCount = $("#progress-container .count");
+    }
+
+    start() {
+        super.start();
         this.showOverlay();
     }
 
+    stop() {
+        this.hideOverlay();
+    }
+
+    showOverlay() {
+        $("#progress-container").show();
+    }
+
+    hideOverlay() {
+        $("#progress-container").fadeOut();
+    }
+
     load() {
-        var _this = this;
         LoaderManager.onTotalProgressCallback = this.setOverlayProgress.bind(this);
         LoaderManager.onAllLoadedCallback = function() {
-            _this.hideOverlay();
             SceneManager.load(MainScene);
         };
 
@@ -38,13 +52,5 @@ export default class LoadingScreenScene extends Scene {
         this.$progressBar.css("width", progress * 100 + "%");
         this.$progressPercentage.text(Math.round(progress * 100) + "%");
         this.$progressCount.text(`${currentIndex + 1} / ${totalFiles}`);
-    }
-
-    showOverlay() {
-        $("#overlay").show();
-    }
-
-    hideOverlay() {
-        $("#overlay").fadeOut();
     }
 }

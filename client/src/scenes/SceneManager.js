@@ -11,6 +11,9 @@ export default {
         if (app != null) {
             app.activeScene = scene;
         }
+        if (currentScene != null) {
+            currentScene.stop();
+        }
         currentScene = scene;
         scene.start();
     },

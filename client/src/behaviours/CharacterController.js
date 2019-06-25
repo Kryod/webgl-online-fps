@@ -3,40 +3,20 @@ import InputManager from "../InputManager.js";
 import Projectile from "./Projectile.js";
 
 export default class CharacterController extends Behaviour {
-    constructor(scene, domElement, object) {
+    constructor(scene, object) {
         super(scene);
 
-        this.domElement = domElement;
         this.object = object;
     }
 
     start() {
         this.cameraSensitivity = 0.002;
         this.cameraMaxAngle = Math.PI / 3.0;
-        this.pointerLocked = false;
         this.euler = new THREE.Euler(0, 0, 0, "YXZ");
-        this.domElement.requestPointerLock = this.domElement.requestPointerLock ||
-                                             this.domElement.mozRequestPointerLock ||
-                                             this.domElement.webkitRequestPointerLock;
-        $("#webgl").on("mousedown", this.onClicked.bind(this));
-        $(document).on("pointerlockchange mozpointerlockchange webkitpointerlockchange", this.onPointerLockChanged.bind(this));
-    }
-
-    onClicked(e) {
-        if (this.pointerLocked || e.button != InputManager.MOUSE_LEFT_BUTTON) {
-            return;
-        }
-        this.domElement.requestPointerLock();
-    }
-
-    onPointerLockChanged(e) {
-        this.pointerLocked = document.pointerLockElement === this.domElement ||
-                             document.mozPointerLockElement === this.domElement ||
-                             document.webkitPointerLockElement === this.domElement;
     }
 
     update(dt) {
-        if (!this.pointerLocked) {
+        if (!InputManager.isPointerLocked()) {
             return;
         }
 

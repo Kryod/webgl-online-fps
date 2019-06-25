@@ -4,6 +4,7 @@ var mousePosition = { "x": 0.0, "y": 0.0 };
 var mouseMovement = { "x": 0.0, "y": 0.0 };
 var buttonsDown = {};
 var lastFrameButtons = {};
+var pointerLocked = false;
 
 $(document).on("keydown", function(e) {
     keysDown[e.key] = true;
@@ -22,16 +23,46 @@ $("#webgl").on("mousemove", function(e) {
 });
 
 $("#webgl").on("mousedown", function(e) {
+    if (!pointerLocked) {
+        return;
+    }
+
     buttonsDown[e.button] = true;
 });
 
 $("#webgl").on("mouseup", function(e) {
+    if (!pointerLocked) {
+        return;
+    }
+
     buttonsDown[e.button] = false;
     return false;
 });
 
 $("#webgl").on("contextmenu", function(e) {
     return false;
+});
+
+$("#webgl")[0].requestPointerLock = $("#webgl")[0].requestPointerLock ||
+                                    $("#webgl")[0].mozRequestPointerLock ||
+                                    $("#webgl")[0].webkitRequestPointerLock;
+$("#webgl").on("mousedown", function(e) {
+    if (pointerLocked || e.button != 0) {
+        return;
+    }
+    $("#webgl")[0].requestPointerLock();
+});
+$(document).on("pointerlockchange mozpointerlockchange webkitpointerlockchange", function(e) {
+    var domElement = $("#webgl")[0];
+    pointerLocked = document.pointerLockElement === domElement ||
+                    document.mozPointerLockElement === domElement ||
+                    document.webkitPointerLockElement === domElement;
+
+    if (!pointerLocked) {
+        $("#pause-container").show();
+    } else {
+        $("#pause-container").hide();
+    }
 });
 
 export default {
@@ -81,6 +112,14 @@ export default {
 
     alt() {
         return false;
+    },
+
+    isPointerLocked() {
+        return pointerLocked === true;
+    },
+
+    showPauseOverlay() {
+        $("#pause-container").show();
     },
 
     update() {

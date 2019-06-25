@@ -16,11 +16,20 @@
 
 <body>
     <div id="overlay">
-        <div id="progress-container">
+        <div id="progress-container" class="overlay" style="display: none;">
+            <span class="loading-text">LOADING</span>
             <div id="progress-bar"></div>
             <div class="percentage">0%</div>
             <div class="count-container">
                 <span class="count"></span>
+            </div>
+        </div>
+
+        <div id="pause-container" class="overlay" style="display: none;">
+            <div class="text">
+                <span class="title">GAME PAUSED</span>
+                <br><br>
+                <span class="subtitle">Click here to play</span>
             </div>
         </div>
     </div>
