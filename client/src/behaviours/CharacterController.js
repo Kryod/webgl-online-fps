@@ -1,5 +1,6 @@
 import Behaviour from "./Behaviour.js";
 import InputManager from "../InputManager.js";
+import Projectile from "./Projectile.js";
 
 export default class CharacterController extends Behaviour {
     constructor(scene, domElement, object) {
@@ -37,6 +38,12 @@ export default class CharacterController extends Behaviour {
     update(dt) {
         if (!this.pointerLocked) {
             return;
+        }
+
+        if (InputManager.getButtonDown(InputManager.MOUSE_LEFT_BUTTON)) {
+            var forwardVector = new THREE.Vector3();
+            this.scene.camera.getWorldDirection(forwardVector);
+            this.sphere = new Projectile(this.scene, 0.1, this.object.position.x, this.object.position.y, this.object.position.z, forwardVector);
         }
 
         this.movement = new THREE.Vector3();
