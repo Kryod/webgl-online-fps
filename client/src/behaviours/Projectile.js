@@ -27,9 +27,8 @@ export default class Projectile extends Behaviour {
 
     update(dt) {
         this.timer += dt;
-        if (this.timer > 6)
-        {
-            //destroy(this);
+        if (this.timer >= 6.0) {
+            this.destroy();
         }
         this.mesh.position.add(this.forwarVector);
 

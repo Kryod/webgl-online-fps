@@ -3,11 +3,20 @@ export default class Behaviour {
         this.refs = {};
         this.scene = scene;
         this.enabled = true;
-        this.addToScene(scene);
+        this.addToScene();
     }
 
-    addToScene(scene) {
-        scene.behaviours.push(this);
+    addToScene() {
+        this.scene.behaviours.push(this);
+    }
+
+    destroy() {
+        this.enabled = false;
+
+        var idx = this.scene.behaviours.indexOf(this);
+        if (idx > -1) {
+            this.scene.behaviours.splice(idx, 1);
+        }
     }
 
     start() {
