@@ -7,6 +7,14 @@ export default class Scene extends THREE.Scene {
         app.update = this.update.bind(this);
     }
 
+    start() {
+        this.behaviours.forEach(behaviour => {
+            if (behaviour.enabled === true) {
+                behaviour.start();
+            }
+        });
+    }
+
     update(dt) {
         this.behaviours.forEach(behaviour => {
             if (behaviour.enabled === true) {

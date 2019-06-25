@@ -3,6 +3,7 @@ import LoaderManager from "../LoaderManager.js";
 
 // Behaviours
 import Cube from "../behaviours/Cube.js";
+import NetworkCharacter from "../behaviours/NetworkCharacter.js";
 import CharacterController from "../behaviours/CharacterController.js";
 
 export default class MainScene extends Scene {
@@ -16,6 +17,7 @@ export default class MainScene extends Scene {
         this.setupCamera();
         this.spawnGround();
         this.spawnPlayer(app._renderer.domElement);
+        this.setupNetwork();
     }
 
     setupScene() {
@@ -37,8 +39,8 @@ export default class MainScene extends Scene {
         this.add(dirLight);
 
         dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 2048;
-        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.mapSize.width = 4096;
+        dirLight.shadow.mapSize.height = 4096;
 
         var d = 50;
         dirLight.shadow.camera.left = -d;
@@ -96,6 +98,10 @@ export default class MainScene extends Scene {
     }
 
     spawnPlayer(domElement) {
-        this.controller = new CharacterController(this, domElement, this.camera);
+        this.characterController = new CharacterController(this, domElement, this.camera);
+    }
+
+    setupNetwork() {
+        this.networkCharacter = new NetworkCharacter(this);
     }
 }

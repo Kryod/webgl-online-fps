@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Kryod/ouaibe-gleu-rezo/issues"
   },
-  "homepage": "https://github.com/Kryod/ouaibe-gleu-rezo#readme"
+  "homepage": "https://github.com/Kryod/ouaibe-gleu-rezo#readme",
+  "dependencies": {
+    "socket.io": "^2.2.0"
+  }
 }

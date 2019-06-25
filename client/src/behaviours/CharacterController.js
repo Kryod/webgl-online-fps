@@ -3,19 +3,13 @@ import InputManager from "../InputManager.js";
 
 export default class CharacterController extends Behaviour {
     constructor(scene, domElement, object) {
-        super();
+        super(scene);
 
         this.domElement = domElement;
         this.object = object;
-        this.addToScene(scene);
-        this.initialize();
     }
 
-    addToScene(scene) {
-        scene.behaviours.push(this);
-    }
-
-    initialize() {
+    start() {
         this.movementSpeed = 10.0;
         this.cameraSensitivity = 0.002;
         this.cameraMaxAngle = Math.PI / 3.0;
@@ -46,7 +40,7 @@ export default class CharacterController extends Behaviour {
             return;
         }
 
-        var mov = new THREE.Vector3();
+        /*var mov = new THREE.Vector3();
         if (InputManager.getKey('z') || InputManager.getKey('w')) {
             mov.z -= 1.0;
         }
@@ -63,13 +57,21 @@ export default class CharacterController extends Behaviour {
         mov.multiplyScalar(dt * this.movementSpeed);
         this.object.translateX(mov.x);
         this.object.translateZ(mov.z);
-        this.object.position.y = 1.75;
+        this.object.position.y = 1.75;*/
 
         this.euler.setFromQuaternion(this.object.quaternion);
-        mov = InputManager.mouseMovement();
-        this.euler.y -= mov.x * this.cameraSensitivity;
-        this.euler.x -= mov.y * this.cameraSensitivity;
+        var mouseMov = InputManager.mouseMovement();
+        this.euler.y -= mouseMov.x * this.cameraSensitivity;
+        this.euler.x -= mouseMov.y * this.cameraSensitivity;
         this.euler.x = Math.max(-this.cameraMaxAngle, Math.min(this.cameraMaxAngle, this.euler.x));
         this.object.quaternion.setFromEuler(this.euler);
+    }
+
+    position(val) {
+        if (val == undefined) {
+            return this.object.position;
+        }
+
+        this.object.position.set(val.x, val.y, val.z);
     }
 }

@@ -3,7 +3,7 @@ import InputManager from "../InputManager.js";
 
 export default class Cube extends Behaviour {
     constructor(scene, size = 3.0) {
-        super();
+        super(scene);
 
         this.rotationSpeed = 2.0;
 
@@ -16,11 +16,6 @@ export default class Cube extends Behaviour {
         this.mesh.castShadow = true;
         this.mesh.receiveShadow = true;
 
-        this.addToScene(scene);
-    }
-
-    addToScene(scene) {
-        scene.behaviours.push(this);
         scene.add(this.mesh);
     }
 

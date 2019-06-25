@@ -12,5 +12,6 @@ export default {
             app.activeScene = scene;
         }
         currentScene = scene;
+        scene.start();
     },
 }
