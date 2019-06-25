@@ -3,6 +3,7 @@ import LoaderManager from "../LoaderManager.js";
 
 // Behaviours
 import Cube from "../behaviours/Cube.js";
+import Projectile from "../behaviours/Projectile.js";
 import NetworkCharacter from "../behaviours/NetworkCharacter.js";
 import CharacterController from "../behaviours/CharacterController.js";
 
