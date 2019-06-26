@@ -109,6 +109,8 @@ export default class MainScene extends Scene {
     }
 
     onNetworkState(state) {
+        this.characterController.refs.networkCharacter.onNetworkState(state);
+
         for (var id in state.players) {
             if (!state.players.hasOwnProperty(id)) {
                 continue;
@@ -120,7 +122,6 @@ export default class MainScene extends Scene {
                 this.characters[id] = new CharacterController(this, player.nickname, false);
             }
 
-            this.characters[id].position(player.pos);
             if (!this.characters[id].localPlayer) {
                 this.characters[id].rotation(player.rot);
             }
