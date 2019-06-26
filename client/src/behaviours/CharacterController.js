@@ -4,8 +4,10 @@ import InputManager from "../InputManager.js";
 import LoaderManager from "../LoaderManager.js";
 import NetworkCharacter from "./NetworkCharacter.js";
 
+var otherCharacters = [];
+
 export default class CharacterController extends Behaviour {
-    constructor(scene, localPlayer = true) {
+    constructor(scene, nickname, isLocalPlayer = true) {
         super(scene);
 
         var fbx = LoaderManager.get("soldier_ani.fbx");
@@ -29,9 +31,33 @@ export default class CharacterController extends Behaviour {
         modelRotOffset.rotation.y = Math.PI / 2;
         modelRotOffset.add(model);
         group.add(modelRotOffset);
-        if (localPlayer) {
+        if (isLocalPlayer) {
             group.add(scene.camera);
             scene.camera.position.set(0, 1.75, 0);
+            this.refs.networkCharacter = new NetworkCharacter(scene, this);
+        } else {
+            var font = LoaderManager.get("lato.json");
+            var textGeometry = new THREE.TextGeometry(nickname, {
+                "font": font,
+                "size": 50,
+                "height": 1,
+            });
+            textGeometry.center();
+            var textMesh = new THREE.Mesh(textGeometry, new THREE.MeshBasicMaterial({ color: 0xffffff }));
+            textMesh.position.set(0, 2.5, 0);
+            textMesh.scale.set(0.005, 0.005, 0.005);
+            for (var x = -2; x <= 2; x += 4) {
+                for (var y = -2; y <= 2; y += 4) {
+                    var outline = new THREE.Mesh(textGeometry, new THREE.MeshBasicMaterial({ color: 0x000000 }));
+                    textMesh.add(outline);
+                    outline.position.set(x, y, 0);
+                    outline.scale.z = 0.5;
+                }
+            }
+            this.refs.nicknameTextMesh = textMesh;
+            group.add(textMesh);
+
+            otherCharacters.push(this);
         }
         scene.add(group);
 
@@ -54,11 +80,8 @@ export default class CharacterController extends Behaviour {
         this.refs.group = group;
         this.refs.camera = scene.camera;
 
-        this.localPlayer = localPlayer === true;
-
-        if (this.localPlayer) {
-            this.refs.networkCharacter = new NetworkCharacter(scene, this);
-        }
+        this.isLocalPlayer = isLocalPlayer === true;
+        this.keybindings = scene.keybindings;
     }
 
     start() {
@@ -79,8 +102,14 @@ export default class CharacterController extends Behaviour {
         this.updateAnimations(dt);
         this.mixer.update(dt);
 
-        if (!InputManager.isPointerLocked() || !this.localPlayer) {
+        if (!InputManager.isPointerLocked() || !this.isLocalPlayer) {
             return;
+        }
+
+        for (var otherCharacter of otherCharacters) {
+            var targetPos = this.position();
+            targetPos.y = 2.5;
+            otherCharacter.refs.nicknameTextMesh.lookAt(targetPos);
         }
 
         if (InputManager.getButtonDown(InputManager.MOUSE_LEFT_BUTTON)) {
@@ -92,16 +121,16 @@ export default class CharacterController extends Behaviour {
         }
 
         this.movement = new THREE.Vector3();
-        if (InputManager.getKey('z') || InputManager.getKey('w')) {
+        if (InputManager.getKey(this.keybindings["Move Forward"])) {
             this.movement.z -= 1.0;
         }
-        if (InputManager.getKey('s')) {
+        if (InputManager.getKey(this.keybindings["Move Backwards"])) {
             this.movement.z += 1.0;
         }
-        if (InputManager.getKey('q') || InputManager.getKey('a')) {
+        if (InputManager.getKey(this.keybindings["Move Left"])) {
             this.movement.x -= 1.0;
         }
-        if (InputManager.getKey('d')) {
+        if (InputManager.getKey(this.keybindings["Move Right"])) {
             this.movement.x += 1.0;
         }
 
@@ -131,7 +160,7 @@ export default class CharacterController extends Behaviour {
     }
 
     onMouseMove(e) {
-        if (!InputManager.isPointerLocked() || !this.localPlayer) {
+        if (!InputManager.isPointerLocked() || !this.isLocalPlayer) {
             return;
         }
 
@@ -146,7 +175,8 @@ export default class CharacterController extends Behaviour {
 
     position(val) {
         if (val == undefined) {
-            return this.refs.group.position;
+            var pos = this.refs.group.position;
+            return new THREE.Vector3(pos.x, pos.y, pos.z);
         }
 
         if (Array.isArray(val)) {

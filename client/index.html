@@ -7,12 +7,19 @@
 
     <link href="css/style.css" rel="stylesheet">
     <link href="css/lato.css" rel="stylesheet">
+    <link href="css/button.css" rel="stylesheet">
+    <link href="css/input.css" rel="stylesheet">
+    <link href="css/remodal.css" rel="stylesheet">
+    <link href="css/remodal-theme-dark.css" rel="stylesheet">
+    <link href="css/snackbar.css" rel="stylesheet">
 
     <script type="application/javascript" src="libs/jquery-3.4.1.min.js"></script>
     <script type="application/javascript" src="libs/inflate.min.js"></script>
     <script type="application/javascript" src="libs/three.min.js"></script>
     <script type="application/javascript" src="libs/socket.io.js"></script>
     <script type="application/javascript" src="libs/SkeletonUtils.js"></script>
+    <script type="application/javascript" src="libs/remodal.min.js"></script>
+    <script type="application/javascript" src="libs/snackbar.js"></script>
 </head>
 
 <body>
@@ -33,10 +40,56 @@
                 <span class="subtitle">Click here to play</span>
             </div>
         </div>
+
+        <div id="startmenu-container" class="overlay" style="display: none;">
+            <div class="contents">
+                <div class="login-form">
+                    <input type="text" placeholder="Nickname" name="nickname" maxlength="16">
+                    <br>
+                    <p class="perspective">
+                        <button id="btn-play" class="btn btn-8 btn-8f">Play</button>
+                    </p>
+                    <p class="perspective">
+                        <button id="btn-controls" class="btn btn-8 btn-8f">Controls</button>
+                    </p>
+                </div>
+
+                <div class="controls" style="display: none;">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td></td>
+                                <td><img class="keybind" data-bind-name="Move Forward" data-value="w" src="img/key-blank.png"></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td><img class="keybind" data-bind-name="Move Left" data-value="a" src="img/key-blank.png"></td>
+                                <td><img class="keybind" data-bind-name="Move Backwards" data-value="s" src="img/key-blank.png"></td>
+                                <td><img class="keybind" data-bind-name="Move Right" data-value="d" src="img/key-blank.png"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <br>
+                    <p class="perspective">
+                        <button id="btn-controls-back" class="btn btn-8 btn-8f">Back</button>
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="webgl"></div>
     <script type="module" src="src/main.js"></script>
+
+    <div id="modal-keybind" class="remodal" data-remodal-id="keybind">
+        <button data-remodal-action="close" class="remodal-close"></button>
+        <h1 class="title"></h1>
+
+        <p>Press a key for "<span class="bind-name"></span>"...</p>
+        <br>
+        <button data-remodal-action="cancel" class="remodal-cancel">Cancel</button>
+    </div>
 </body>
 
 </html>

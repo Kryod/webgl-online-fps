@@ -67,7 +67,7 @@ body {
     width: 0%;
     height: 100%;
     background-color: #2BB52D;
-    transition: width 0.5s ease;
+    transition: width 0.25s ease;
 }
 
 #progress-container .loading-text {
@@ -111,4 +111,48 @@ body {
          1px -1px 0 #000,
         -1px  1px 0 #000,
          1px  1px 0 #000;
+}
+
+#startmenu-container .contents {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+#startmenu-container .btn {
+    font-size: 1.5em;
+}
+
+#startmenu-container input[name='nickname'] {
+    font-size: 1.5em;
+    width: 250px;
+}
+
+#startmenu-container .controls .keybind {
+    cursor: pointer;
+}
+
+#startmenu-container .controls td {
+    width: 100px;
+    height: 100px;
+    padding: 0px;
+    position: relative;
+}
+
+#startmenu-container .controls .keybind + span {
+    pointer-events: none;
+    font-size: 20px;
+    position: absolute;
+    width: 100px;
+
+    top: 35px;
+    left: 0px;
+}
+
+#modal-keybind {
+    font-family: 'Lato', sans-serif;
+    cursor: default;
+    user-select: none;
 }

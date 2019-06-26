@@ -1,5 +1,4 @@
 import Scene from "./Scene.js";
-import InputManager from "../InputManager.js";
 import LoaderManager from "../LoaderManager.js";
 import NetworkManager from "../NetworkManager.js";
 
@@ -8,8 +7,11 @@ import Cube from "../behaviours/Cube.js";
 import CharacterController from "../behaviours/CharacterController.js";
 
 export default class MainScene extends Scene {
-    constructor(app) {
+    constructor(app, data) {
         super(app);
+
+        this.keybindings = data.keybindings;
+        this.nickname = data.nickname;
 
         this.setupScene();
         this.setupLighting();
@@ -17,12 +19,7 @@ export default class MainScene extends Scene {
         this.spawnGround();
         this.spawnPlayer();
         this.test();
-        this.connectToServer();
-    }
-
-    start() {
-        super.start();
-        InputManager.showPauseOverlay();
+        this.setupNetwork();
     }
 
     setupScene() {
@@ -99,18 +96,16 @@ export default class MainScene extends Scene {
 
     spawnPlayer() {
         this.characters = {};
-        this.characterController = new CharacterController(this);
+        this.characterController = new CharacterController(this, this.nickname);
     }
 
-    connectToServer() {
-        var _this = this;
-        NetworkManager.connect(function(mngr) {
-            var id = mngr.id();
-            _this.characterController.refs.networkCharacter.playerId = id;
-            _this.characters[id] = _this.characterController;
+    setupNetwork() {
+        var id = NetworkManager.id();
 
-            mngr.on("state", _this.onNetworkState.bind(_this));
-        });
+        this.characterController.refs.networkCharacter.playerId = id;
+        this.characters[id] = this.characterController;
+
+        NetworkManager.on("state", this.onNetworkState.bind(this));
     }
 
     onNetworkState(state) {
@@ -122,7 +117,7 @@ export default class MainScene extends Scene {
             var player = state.players[id];
             if (!this.characters.hasOwnProperty(id)) {
                 // A new player joined, add their character to the scene
-                this.characters[id] = new CharacterController(this, false);
+                this.characters[id] = new CharacterController(this, player.nickname, false);
             }
 
             this.characters[id].position(player.pos);

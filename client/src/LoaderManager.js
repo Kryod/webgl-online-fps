@@ -5,6 +5,7 @@ const gltfLoader = new THREE.GLTFLoader();
 const fbxLoader = new THREE.FBXLoader();
 const textureLoader = new THREE.TextureLoader();
 const fileLoader = new THREE.FileLoader();
+const fontLoader = new THREE.FontLoader();
 
 var queue = [];
 var loaded = {};
@@ -71,6 +72,13 @@ export default {
         });
     },
 
+    queueFont(path) {
+        queue.push({
+            "path": path,
+            "loader": fontLoader,
+        })
+    },
+
     startLoading() {
         currentFileIndex = 0;
         this.load();
@@ -94,7 +102,7 @@ export default {
                 "data": result,
             };
             currentFileIndex++;
-            _this.load();
+            setTimeout(_this.load.bind(_this), 250);
         }, function(xhr) {
             fileProgress(xhr.loaded / xhr.total);
         }, function(err) {

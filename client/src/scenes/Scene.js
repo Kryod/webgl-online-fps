@@ -1,5 +1,5 @@
 export default class Scene extends THREE.Scene {
-    constructor(app) {
+    constructor(app, data) {
         super();
 
         this.camera = new THREE.PerspectiveCamera(75, app.clientWidth / app.clientHeight, 0.25, 500.0);

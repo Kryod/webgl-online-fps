@@ -43,12 +43,16 @@ $(document).on("contextmenu", function(e) {
 });
 
 
-document.addEventListener("mousedown", function(e) {
+function onMouseDown(e) {
     if (pointerLocked || e.button != 0) {
         return;
     }
+    lockPointer();
+}
+
+function lockPointer() {
     $("body")[0].requestPointerLock();
-}, false);
+}
 
 document.addEventListener("pointerlockchange", function(e) {
     var domElement = $("body")[0];
@@ -117,6 +121,18 @@ export default {
 
     isPointerLocked() {
         return pointerLocked === true;
+    },
+
+    enablePointerLock() {
+        document.addEventListener("mousedown", onMouseDown, false);
+    },
+
+    disablePointerLock() {
+        document.removeEventListener("mousedown", onMouseDown, false);
+    },
+
+    requestPointerLock() {
+        lockPointer();
     },
 
     showPauseOverlay() {

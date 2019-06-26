@@ -1,8 +1,14 @@
 var socket = null;
 
 export default {
-    connect(onConnected) {
-        socket = io("http://localhost:28333");
+    connect(onConnected, onError, data = {}) {
+        data = $.param(data);
+
+        socket = io("localhost:28333", {
+            "reconnection": false,
+            "timeout": 5000,
+            "query": data,
+        });
 
         var _this = this;
         socket.on("connect", function() {
@@ -13,6 +19,12 @@ export default {
 
         socket.on("disconnect", function() {
             socket = null;
+        });
+
+        socket.on("connect_error", function() {
+            if (typeof onError == "function") {
+                onError(_this);
+            }
         });
     },
 

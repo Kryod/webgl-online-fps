@@ -6,8 +6,8 @@ export default {
         app = newApp;
     },
 
-    load(sceneClass) {
-        var scene = new sceneClass(app);
+    load(sceneClass, data = {}) {
+        var scene = new sceneClass(app, data);
         if (app != null) {
             app.activeScene = scene;
         }

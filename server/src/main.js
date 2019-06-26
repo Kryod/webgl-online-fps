@@ -9,6 +9,7 @@ var state = {
 io.on("connection", client => {
     client.data = {
         "position": new maths.Vector3(0, 0, 15),
+        "nickname": client.handshake.query.nickname || "",
     };
     state.players[client.id] = client;
 
@@ -65,11 +66,13 @@ function stripState() {
             continue;
         }
 
-        var movement = state.players[key].data.movement || new maths.Vector3();
+        var playerData = state.players[key].data;
+        var movement = playerData.movement || new maths.Vector3();
         stripped.players[key] = {
-            "pos": state.players[key].data.position,
-            "rot": state.players[key].data.rotation,
+            "pos": playerData.position,
+            "rot": playerData.rotation,
             "moving": movement.x != 0 || movement.z != 0,
+            "nickname": playerData.nickname,
         };
     }
 
