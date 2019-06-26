@@ -1,6 +1,20 @@
-const server = require("http").createServer();
-const io = require("socket.io")(server);
+const config = require("../config");
 const maths = require("math.gl");
+
+var server = null;
+if (config.https === false) {
+    const http = require("http");
+    server = http.createServer();
+} else {
+    const https = require("https");
+    server = https.createServer({
+        "key": fs.readFileSync(config.https.key),
+        "cert": fs.readFileSync(config.https.cert),
+        "requestCert": false,
+        "rejectUnauthorized": false
+    });
+}
+const io = require("socket.io")(server);
 
 var state = {
     "players": {},
@@ -79,10 +93,9 @@ function stripState() {
     return stripped;
 }
 
-var host = "0.0.0.0";
-var port = 28333;
 var ticks = 40;
-server.listen(port, host);
+server.listen(config.port, config.host);
 setInterval(mainLoop, 1.0 / ticks * 1000.0);
 
-console.log(`Server running on ${host}:${port}`);
+var protocol = config.https === false ? "http" : "https";
+console.log(`Server running on ${protocol}://${config.host}:${config.port}`);
