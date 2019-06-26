@@ -1,10 +1,10 @@
 import Scene from "./Scene.js";
 import InputManager from "../InputManager.js";
 import LoaderManager from "../LoaderManager.js";
+import NetworkManager from "../NetworkManager.js";
 
 // Behaviours
 import Cube from "../behaviours/Cube.js";
-import NetworkCharacter from "../behaviours/NetworkCharacter.js";
 import CharacterController from "../behaviours/CharacterController.js";
 
 export default class MainScene extends Scene {
@@ -14,11 +14,10 @@ export default class MainScene extends Scene {
         this.setupScene();
         this.setupLighting();
         this.setupSky();
-        this.test();
-        this.setupCamera();
         this.spawnGround();
         this.spawnPlayer();
-        this.setupNetwork();
+        this.test();
+        this.connectToServer();
     }
 
     start() {
@@ -83,11 +82,6 @@ export default class MainScene extends Scene {
         this.add(sky);
     }
 
-    setupCamera() {
-        this.camera.position.set(0, 1.75, 25);
-        this.camera.lookAt(this.cube.mesh.position);
-    }
-
     spawnGround() {
         const groundGeo = new THREE.PlaneBufferGeometry(10000, 10000);
         const groundMat = new THREE.MeshLambertMaterial();
@@ -104,10 +98,50 @@ export default class MainScene extends Scene {
     }
 
     spawnPlayer() {
-        this.characterController = new CharacterController(this, this.camera);
+        this.characters = {};
+        this.characterController = new CharacterController(this);
     }
 
-    setupNetwork() {
-        this.networkCharacter = new NetworkCharacter(this);
+    connectToServer() {
+        var _this = this;
+        NetworkManager.connect(function(mngr) {
+            var id = mngr.id();
+            _this.characterController.refs.networkCharacter.playerId = id;
+            _this.characters[id] = _this.characterController;
+
+            mngr.on("state", _this.onNetworkState.bind(_this));
+        });
+    }
+
+    onNetworkState(state) {
+        for (var id in state.players) {
+            if (!state.players.hasOwnProperty(id)) {
+                continue;
+            }
+
+            var player = state.players[id];
+            if (!this.characters.hasOwnProperty(id)) {
+                // A new player joined, add their character to the scene
+                this.characters[id] = new CharacterController(this, false);
+            }
+
+            this.characters[id].position(player.pos);
+            if (!this.characters[id].localPlayer) {
+                this.characters[id].rotation(player.rot);
+            }
+            this.characters[id].isMoving = player.moving;
+        }
+
+        for (var id in this.characters) {
+            if (!this.characters.hasOwnProperty(id)) {
+                continue;
+            }
+
+            if (!state.players.hasOwnProperty(id)) {
+                // A player disconnected, remove their character from the scene
+                this.characters[id].destroy();
+                delete this.characters[id];
+            }
+        }
     }
 }

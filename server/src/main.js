@@ -8,7 +8,7 @@ var state = {
 
 io.on("connection", client => {
     client.data = {
-        "position": new maths.Vector3(0, 1.75, 25),
+        "position": new maths.Vector3(0, 0, 15),
     };
     state.players[client.id] = client;
 
@@ -40,12 +40,12 @@ function mainLoop() {
 
         if (player.data.movement != null) {
             var mov = new maths.Vector3(player.data.movement);
-            mov.scale(10.0);
+            mov.scale(3.0);
             mov.scale(dt);
 
             mov = new maths.Vector3([mov.x, mov.z, 0]);
             mov.rotateZ({
-                "radians": player.data.rotation,
+                "radians": -player.data.rotation,
             });
             player.data.position.x += mov.x;
             player.data.position.z += mov.y;
@@ -65,8 +65,11 @@ function stripState() {
             continue;
         }
 
+        var movement = state.players[key].data.movement || new maths.Vector3();
         stripped.players[key] = {
             "pos": state.players[key].data.position,
+            "rot": state.players[key].data.rotation,
+            "moving": movement.x != 0 || movement.z != 0,
         };
     }
 

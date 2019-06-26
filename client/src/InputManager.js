@@ -14,15 +14,14 @@ $(document).on("keyup", function(e) {
     keysDown[e.key] = false;
 });
 
-$("#webgl").on("mousemove", function(e) {
-    e = e.originalEvent;
+document.addEventListener("mousemove", function(e) {
     mousePosition.x = e.clientX;
     mousePosition.y = e.clientY;
-    mouseMovement.x = e.movementX || e.mozMovementX || e.webkitMovementX || 0.0;
-    mouseMovement.y = e.movementY || e.mozMovementY || e.webkitMovementY || 0.0;
-});
+    mouseMovement.x = e.movementX;
+    mouseMovement.y = e.movementY;
+}, false);
 
-$("#webgl").on("mousedown", function(e) {
+$(document).on("mousedown", function(e) {
     if (!pointerLocked) {
         return;
     }
@@ -30,7 +29,7 @@ $("#webgl").on("mousedown", function(e) {
     buttonsDown[e.button] = true;
 });
 
-$("#webgl").on("mouseup", function(e) {
+$(document).on("mouseup", function(e) {
     if (!pointerLocked) {
         return;
     }
@@ -39,31 +38,33 @@ $("#webgl").on("mouseup", function(e) {
     return false;
 });
 
-$("#webgl").on("contextmenu", function(e) {
+$(document).on("contextmenu", function(e) {
     return false;
 });
 
-$("#webgl")[0].requestPointerLock = $("#webgl")[0].requestPointerLock ||
-                                    $("#webgl")[0].mozRequestPointerLock ||
-                                    $("#webgl")[0].webkitRequestPointerLock;
-$("#webgl").on("mousedown", function(e) {
+
+document.addEventListener("mousedown", function(e) {
     if (pointerLocked || e.button != 0) {
         return;
     }
-    $("#webgl")[0].requestPointerLock();
-});
-$(document).on("pointerlockchange mozpointerlockchange webkitpointerlockchange", function(e) {
-    var domElement = $("#webgl")[0];
-    pointerLocked = document.pointerLockElement === domElement ||
-                    document.mozPointerLockElement === domElement ||
-                    document.webkitPointerLockElement === domElement;
+    $("body")[0].requestPointerLock();
+}, false);
+
+document.addEventListener("pointerlockchange", function(e) {
+    var domElement = $("body")[0];
+    pointerLocked = document.pointerLockElement === domElement;
 
     if (!pointerLocked) {
         $("#pause-container").show();
     } else {
         $("#pause-container").hide();
     }
-});
+}, false);
+
+document.addEventListener("pointerlockerror", function() {
+    console.error("Could not lock pointer");
+}, false);
+
 
 export default {
     "MOUSE_LEFT_BUTTON": 0,
@@ -139,5 +140,13 @@ export default {
 
         mouseMovement.x = 0.0;
         mouseMovement.y = 0.0;
+    },
+
+    on(event, fn) {
+        document.addEventListener(event, fn, false);
+    },
+
+    off(event, fn) {
+        document.removeEventListener(event, fn, false);
     },
 }

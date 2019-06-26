@@ -33,6 +33,8 @@ export default {
     },
 
     send(event, data) {
-        socket.emit(event, data);
+        if (socket != null) {
+            socket.emit(event, data);
+        }
     },
 }
