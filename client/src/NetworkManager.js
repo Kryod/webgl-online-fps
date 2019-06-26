@@ -4,7 +4,7 @@ export default {
     connect(onConnected, onError, data = {}) {
         data = $.param(data);
 
-        socket = io("localhost:28333", {
+        socket = io(`${CONFIG.server.host}:${CONFIG.server.port}`, {
             "reconnection": false,
             "timeout": 5000,
             "query": data,
