@@ -1,3 +1,4 @@
+const fs = require("fs");
 const config = require("../config");
 const maths = require("math.gl");
 
