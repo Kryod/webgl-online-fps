@@ -99,6 +99,7 @@ export default class MainScene extends Scene {
 
     spawnPlayer() {
         this.characters = {};
+        this.projectiles= {};
         this.characterController = new CharacterController(this);
     }
 
@@ -142,6 +143,17 @@ export default class MainScene extends Scene {
                 this.characters[id].destroy();
                 delete this.characters[id];
             }
+        }
+
+        for (var projectile in state.projectiles) {
+
+            var proj = state.projectiles[projectile.id];
+            console.log("checking projectiles");
+            if (!this.projectiles.hasOwnProperty(id)) {
+                // Instantiating new projectiles
+                this.projectiles[projectile.id] = new Projectile(this.scene, projectile.pos, forwardVector, 0.1, 20);
+            }
+            this.projectiles[projectile.id].position(proj.pos);
         }
     }
 }

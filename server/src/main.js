@@ -2,8 +2,19 @@ const server = require("http").createServer();
 const io = require("socket.io")(server);
 const maths = require("math.gl");
 
+const projectile = {
+    id: 0,
+    pos: 0,
+    forwardVector: new maths.Vector3(0),
+    timer: 0,
+    from: 0
+};
+
+var id_projectile = 0;
+
 var state = {
     "players": {},
+    "projectiles": {}
 };
 
 io.on("connection", client => {
@@ -18,6 +29,18 @@ io.on("connection", client => {
         client.data.movement = mov;
 
         client.data.rotation = data.rot;
+    });
+
+    client.on("fire", data => {
+        var made_projectile = Object.create(projectile);
+        made_projectile.pos = data.position;
+        made_projectile.forwardVector = data.forwardVector;
+        made_projectile.from = client.id;
+        made_projectile.id = id_projectile;
+        state.projectiles[id_projectile] = made_projectile;
+
+        console.log(`added projectile ${made_projectile}`);
+        id_projectile++;
     });
 
     client.on("disconnect", () => {
@@ -58,6 +81,7 @@ function mainLoop() {
 function stripState() {
     var stripped = {
         "players": {},
+        "projectiles": {},
     };
 
     for (var key in state.players) {
@@ -70,6 +94,18 @@ function stripState() {
             "pos": state.players[key].data.position,
             "rot": state.players[key].data.rotation,
             "moving": movement.x != 0 || movement.z != 0,
+        };
+    }
+
+    for (var key in state.projectiles) {
+        if (!state.projectiles.hasOwnProperty(key)) {
+            continue;
+        }
+
+        //var movement = state.projectiles[key].data.movement || new maths.Vector3();
+        stripped.projectiles[key.id] = {
+            "id": key.id,
+            "pos": state.projectiles[key.id].data.position,
         };
     }
 

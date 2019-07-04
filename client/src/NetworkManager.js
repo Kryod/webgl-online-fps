@@ -2,7 +2,7 @@ var socket = null;
 
 export default {
     connect(onConnected) {
-        socket = io("http://localhost:28333");
+        socket = io("localhost:28333");
 
         var _this = this;
         socket.on("connect", function() {

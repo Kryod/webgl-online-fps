@@ -1,5 +1,4 @@
 import Behaviour from "./Behaviour.js";
-import Projectile from "./Projectile.js";
 import InputManager from "../InputManager.js";
 import LoaderManager from "../LoaderManager.js";
 import NetworkCharacter from "./NetworkCharacter.js";
@@ -57,7 +56,7 @@ export default class CharacterController extends Behaviour {
         this.localPlayer = localPlayer === true;
 
         if (this.localPlayer) {
-            this.refs.networkCharacter = new NetworkCharacter(scene, this);
+            this.refs.networkCharacter = new NetworkCharacter(scene, this, this.refs.camera);
         }
     }
 
@@ -83,13 +82,13 @@ export default class CharacterController extends Behaviour {
             return;
         }
 
-        if (InputManager.getButtonDown(InputManager.MOUSE_LEFT_BUTTON)) {
+        /*if (InputManager.getButtonDown(InputManager.MOUSE_LEFT_BUTTON)) {
             var pos = new THREE.Vector3();
             var forwardVector = new THREE.Vector3();
             this.refs.camera.getWorldPosition(pos);
             this.refs.camera.getWorldDirection(forwardVector);
             new Projectile(this.scene, pos, forwardVector, 0.1, 20);
-        }
+        }*/
 
         this.movement = new THREE.Vector3();
         if (InputManager.getKey('z') || InputManager.getKey('w')) {

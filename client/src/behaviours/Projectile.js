@@ -25,8 +25,12 @@ export default class Projectile extends Behaviour {
         if (this.timer >= 6.0) {
             this.destroy();
         }
+        /*this.timer += dt;
+        if (this.timer >= 6.0) {
+            this.destroy();
+        }
 
         var movement = this.forwardVector.clone().multiplyScalar(dt);
-        this.mesh.position.add(movement);
+        this.mesh.position.add(movement);*/
     }
 }
