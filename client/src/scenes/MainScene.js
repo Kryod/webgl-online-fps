@@ -99,6 +99,7 @@ export default class MainScene extends Scene {
         var id = NetworkManager.id();
 
         this.characters = {};
+        this.projectiles = {};
         this.characterController = new CharacterController(this, id, this.nickname);
         this.characters[id] = this.characterController;
 
@@ -136,5 +137,16 @@ export default class MainScene extends Scene {
         }
 
         this.ball.position.set(state.ball[0], state.ball[1], state.ball[2]);
+
+        for (var projectile in state.projectiles) {
+
+            var proj = state.projectiles[projectile.id];
+            console.log("checking projectiles");
+            if (!this.projectiles.hasOwnProperty(id)) {
+                // Instantiating new projectiles
+                this.projectiles[projectile.id] = new Projectile(this.scene, projectile.pos, forwardVector, 0.1, 20);
+            }
+            this.projectiles[projectile.id].position(proj.pos);
+        }
     }
 }

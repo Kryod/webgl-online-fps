@@ -1,5 +1,4 @@
 import Behaviour from "./Behaviour.js";
-import Projectile from "./Projectile.js";
 import InputManager from "../InputManager.js";
 import LoaderManager from "../LoaderManager.js";
 import NetworkCharacter from "./NetworkCharacter.js";
@@ -80,7 +79,7 @@ export default class CharacterController extends Behaviour {
         this.refs.camera = scene.camera;
 
         this.isLocalPlayer = isLocalPlayer === true;
-        this.refs.networkCharacter = new NetworkCharacter(scene, playerId, this);
+        this.refs.networkCharacter = new NetworkCharacter(scene, playerId, this, this.refs.camera);
         this.keybindings = scene.keybindings;
     }
 
@@ -114,14 +113,6 @@ export default class CharacterController extends Behaviour {
 
         if (!InputManager.isPointerLocked()) {
             return;
-        }
-
-        if (InputManager.getButtonDown(InputManager.MOUSE_LEFT_BUTTON)) {
-            var pos = new THREE.Vector3();
-            var forwardVector = new THREE.Vector3();
-            this.refs.camera.getWorldPosition(pos);
-            this.refs.camera.getWorldDirection(forwardVector);
-            new Projectile(this.scene, pos, forwardVector, 0.1, 20);
         }
 
         this.movement = new THREE.Vector3();

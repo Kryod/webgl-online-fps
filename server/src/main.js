@@ -18,9 +18,20 @@ if (config.https === false) {
 }
 const io = require("socket.io")(server);
 
+const projectile = {
+    id: 0,
+    pos: 0,
+    forwardVector: new maths.Vector3(0),
+    timer: 0,
+    from: 0
+};
+
+var id_projectile = 0;
+
 var state = {
     "players": {},
     "bodies": {},
+    "projectiles": {}
 };
 
 io.on("connection", client => {
@@ -36,6 +47,18 @@ io.on("connection", client => {
         client.data.movement = mov;
 
         client.data.rotation = data.rot;
+    });
+
+    var pos = client.data.body.position;
+    client.on("fire", data => {
+        var made_projectile = Object.create(projectile);
+        made_projectile.pos = { "x": pos.x, "y": pos.z - 0.5, "z": pos.y };
+        made_projectile.forwardVector = data.forwardVector;
+        made_projectile.from = client.id;
+        made_projectile.id = id_projectile;
+        state.projectiles[id_projectile] = made_projectile;
+
+        id_projectile++;
     });
 
     client.on("disconnect", () => {
@@ -137,6 +160,7 @@ function mainLoop() {
 function stripState() {
     var stripped = {
         "players": {},
+        "projectiles": {},
     };
 
     for (var key in state.players) {
@@ -158,6 +182,17 @@ function stripState() {
     {
         var pos = state.bodies["ball"].position;
         stripped["ball"] = [ pos.x, pos.z, pos.y ];
+    }
+
+    for (var key in state.projectiles) {
+        if (!state.projectiles.hasOwnProperty(key)) {
+            continue;
+        }
+
+        stripped.projectiles[key.id] = {
+            "id": key.id,
+            "pos": state.projectiles[key.id].data.position,
+        };
     }
 
     return stripped;
