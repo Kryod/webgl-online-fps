@@ -23,7 +23,6 @@ export default class NetworkCharacter extends Behaviour {
     }
 
     update(dt) {
-<<<<<<< 5d09d216c01e48fd79f513b3e3f85f1d1ecd6b34
         if (this.refs.characterController.isLocalPlayer) {
             var mov = this.refs.characterController.movement;
             var rot = this.refs.characterController.euler.y;
@@ -46,23 +45,6 @@ export default class NetworkCharacter extends Behaviour {
                     "forwardVector": forwardVector,
                 });
             }
-=======
-        var mov = this.refs.characterController.movement;
-        var rot = this.refs.characterController.euler.y;
-
-        if (InputManager.getButtonDown(InputManager.MOUSE_LEFT_BUTTON)) {
-            var pos = new THREE.Vector3();
-            var forwardVector = new THREE.Vector3();
-            this.refs.camera.getWorldDirection(forwardVector);
-            this.refs.camera.getWorldPosition(pos);
-            forwardVector = forwardVector.multiplyScalar(5);
-            NetworkManager.send("fire", {
-                "forwardVector": forwardVector,
-                "position": pos
-            });
-
-            //new Projectile(this.scene, pos, forwardVector, 0.1, 20);
->>>>>>> multiple tirs en reseau mais pas de mouvement
         }
 
         var pos = new THREE.Vector3();
