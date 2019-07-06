@@ -1,6 +1,7 @@
 const fs = require("fs");
 const config = require("../config");
 const maths = require("math.gl");
+<<<<<<< HEAD
 const cannon = require("cannon");
 const util = require("util");
 
@@ -18,6 +19,9 @@ if (config.https === false) {
     });
 }
 const io = require("socket.io")(server);
+=======
+const util = require('util');
+>>>>>>> dee51e0a283b281f41c95945872914210d1f8bcb
 
 
 const projectile = {
@@ -32,7 +36,10 @@ var id_projectile = 0;
 
 var state = {
     "players": {},
+<<<<<<< HEAD
     "bodies": {},
+=======
+>>>>>>> dee51e0a283b281f41c95945872914210d1f8bcb
     "projectiles": {}
 };
 
@@ -51,16 +58,29 @@ io.on("connection", client => {
         client.data.rotation = data.rot;
     });
 
+<<<<<<< HEAD
     var pos = client.data.body.position;
     client.on("fire", data => {
         var made_projectile = Object.create(projectile);
         made_projectile.pos = { "x": pos.x, "y": pos.z - 0.5, "z": pos.y };
+=======
+    client.on("fire", data => {
+        var made_projectile = Object.create(projectile);
+        made_projectile.pos = new maths.Vector3(data.position.x, data.position.y, data.position.z);
+
+        console.log("obj=" + util.inspect(data.forwardVector, false, null, true));
+>>>>>>> dee51e0a283b281f41c95945872914210d1f8bcb
         made_projectile.forwardVector = new maths.Vector3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z);
         made_projectile.from = client.id;
         made_projectile.id = id_projectile;
         state.projectiles[id_projectile] = made_projectile;
 
+<<<<<<< HEAD
         id_projectile++;
+=======
+        console.log(`added projectile ${made_projectile} with id ${id_projectile}`);
+        id_projectile = id_projectile+1;
+>>>>>>> dee51e0a283b281f41c95945872914210d1f8bcb
     });
 
     client.on("disconnect", () => {
@@ -172,6 +192,23 @@ function mainLoop() {
         state.projectiles[key].pos = pos;
     }
 
+    /*for (var key in state.projectiles) {
+        if (!state.projectiles.hasOwnProperty(key)) {
+            continue;
+        }
+
+        var proj = state.projectiles[key];
+        var fwdV = proj.forwardVector;
+        console.log("fwdV=" + util.inspect(fwdV, false, null, true));
+        //console.log(`fwdV = ${fwdV.x} ${fwdV.y} ${fwd.z}`);
+        var movement = fwdV.clone().scale(dt);
+        var pos = proj.pos;
+
+        console.log("obj=" + util.inspect(movement, false, null, true));
+        pos.add(movement);
+        state.projectiles[key].pos = pos;
+    }*/
+
     io.emit("state",  stripState());
 }
 
@@ -207,6 +244,18 @@ function stripState() {
             continue;
         }
 
+        stripped.projectiles[key] = {
+            "id": state.projectiles[key].id,
+            "pos": state.projectiles[key].pos,
+        };
+    }
+
+    for (var key in state.projectiles) {
+        if (!state.projectiles.hasOwnProperty(key)) {
+            continue;
+        }
+
+        //var movement = state.projectiles[key].data.movement || new maths.Vector3();
         stripped.projectiles[key] = {
             "id": state.projectiles[key].id,
             "pos": state.projectiles[key].pos,

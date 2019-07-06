@@ -1,6 +1,7 @@
 var socket = null;
 
 export default {
+<<<<<<< HEAD
     connect(onConnected, onError, data = {}) {
         data = $.param(data);
 
@@ -9,6 +10,10 @@ export default {
             "timeout": 5000,
             "query": data,
         });
+=======
+    connect(onConnected) {
+        socket = io("localhost:28333");
+>>>>>>> dee51e0a283b281f41c95945872914210d1f8bcb
 
         var _this = this;
         socket.on("connect", function() {
