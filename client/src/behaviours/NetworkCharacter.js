@@ -1,5 +1,4 @@
 import Behaviour from "./Behaviour.js";
-import Projectile from "./Projectile.js";
 import InputManager from "../InputManager.js";
 import NetworkManager from "../NetworkManager.js";
 
@@ -25,12 +24,13 @@ export default class NetworkCharacter extends Behaviour {
             var forwardVector = new THREE.Vector3();
             this.refs.camera.getWorldDirection(forwardVector);
             this.refs.camera.getWorldPosition(pos);
+            forwardVector = forwardVector.multiplyScalar(5);
             NetworkManager.send("fire", {
                 "forwardVector": forwardVector,
                 "position": pos
             });
 
-            new Projectile(this.scene, pos, forwardVector, 0.1, 20);
+            //new Projectile(this.scene, pos, forwardVector, 0.1, 20);
         }
 
         if (mov != undefined && rot != undefined && (!this.lastMovement.equals(mov) || this.lastRotation != rot)) {

@@ -1,6 +1,8 @@
 const server = require("http").createServer();
 const io = require("socket.io")(server);
 const maths = require("math.gl");
+const util = require('util');
+
 
 const projectile = {
     id: 0,
@@ -33,8 +35,10 @@ io.on("connection", client => {
 
     client.on("fire", data => {
         var made_projectile = Object.create(projectile);
-        made_projectile.pos = data.position;
-        made_projectile.forwardVector = data.forwardVector;
+        made_projectile.pos = new maths.Vector3(data.position.x, data.position.y, data.position.z);
+
+        console.log("obj=" + util.inspect(data.forwardVector, false, null, true));
+        made_projectile.forwardVector = new maths.Vector3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z);
         made_projectile.from = client.id;
         made_projectile.id = id_projectile;
         state.projectiles[id_projectile] = made_projectile;
@@ -81,12 +85,15 @@ function mainLoop() {
         }
 
         var proj = state.projectiles[key];
-        var fwdV = new maths.Vector3(proj.forwardVector[0], proj.forwardVector[1], proj.forwardVector[2]);
+        var fwdV = proj.forwardVector;
+        console.log("fwdV=" + util.inspect(fwdV, false, null, true));
         //console.log(`fwdV = ${fwdV.x} ${fwdV.y} ${fwd.z}`);
-        var movement = fwdV.scale(dt);
-        var pos = new maths.Vector3(proj.pos[0], proj.pos[1], proj.pos[2]);
+        var movement = fwdV.clone().scale(dt);
+        var pos = proj.pos;
+
+        console.log("obj=" + util.inspect(movement, false, null, true));
         pos.add(movement);
-        proj.pos = pos;
+        state.projectiles[key].pos = pos;
     }*/
 
     io.emit("state",  stripState());
@@ -118,7 +125,7 @@ function stripState() {
 
         //var movement = state.projectiles[key].data.movement || new maths.Vector3();
         stripped.projectiles[key] = {
-            "id": key.id,
+            "id": state.projectiles[key].id,
             "pos": state.projectiles[key].pos,
         };
     }

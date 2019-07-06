@@ -1,7 +1,7 @@
 import Behaviour from "./Behaviour.js";
 
 export default class Projectile extends Behaviour {
-    constructor(scene, pos, forwardVector, size = 0.1, speed = 20) {
+    constructor(scene, pos, forwardVector, size = 0.1, speed = 20, id) {
         super(scene);
 
         this.geometry = new THREE.SphereGeometry(size, 32, 32);
