@@ -142,19 +142,21 @@ export default class MainScene extends Scene {
         for (var id in state.projectiles) {
             var proj = state.projectiles[id];
             if (!this.projectiles.hasOwnProperty(id)) {
-                // Instantiating new projectiles
                 var create = true;
+                //checking in existing projectiles if current one is already spawned
                 for (var id2 in this.projectiles){
-                    if (this.projectiles[id2].id == proj.id)
+                    if (this.projectiles[id2].id == proj.id){
+                        // if he is spawned
                         create = false;
+                        this.projectiles[id2].position(proj.pos);
+                    }
                 }
                 if (create)
                 {
-                    this.projectiles[proj.id] = new Projectile(this, proj.pos, new THREE.Vector3(), 0.1, 20);
+                    this.projectiles[proj.id] = new Projectile(this, proj.pos, new THREE.Vector3(), 0.1, 20, proj.id);
                     console.log("creating a ball");
                 }
             }
-            this.projectiles[proj.id].position(proj.pos);
         }
     }
 }
