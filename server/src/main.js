@@ -39,8 +39,8 @@ io.on("connection", client => {
         made_projectile.id = id_projectile;
         state.projectiles[id_projectile] = made_projectile;
 
-        console.log(`added projectile ${made_projectile}`);
-        id_projectile++;
+        console.log(`added projectile ${made_projectile} with id ${id_projectile}`);
+        id_projectile = id_projectile+1;
     });
 
     client.on("disconnect", () => {
@@ -75,6 +75,20 @@ function mainLoop() {
         }
     }
 
+    /*for (var key in state.projectiles) {
+        if (!state.projectiles.hasOwnProperty(key)) {
+            continue;
+        }
+
+        var proj = state.projectiles[key];
+        var fwdV = new maths.Vector3(proj.forwardVector[0], proj.forwardVector[1], proj.forwardVector[2]);
+        //console.log(`fwdV = ${fwdV.x} ${fwdV.y} ${fwd.z}`);
+        var movement = fwdV.scale(dt);
+        var pos = new maths.Vector3(proj.pos[0], proj.pos[1], proj.pos[2]);
+        pos.add(movement);
+        proj.pos = pos;
+    }*/
+
     io.emit("state",  stripState());
 }
 
@@ -103,9 +117,9 @@ function stripState() {
         }
 
         //var movement = state.projectiles[key].data.movement || new maths.Vector3();
-        stripped.projectiles[key.id] = {
+        stripped.projectiles[key] = {
             "id": key.id,
-            "pos": state.projectiles[key.id].data.position,
+            "pos": state.projectiles[key].pos,
         };
     }
 

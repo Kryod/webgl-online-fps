@@ -33,4 +33,16 @@ export default class Projectile extends Behaviour {
         var movement = this.forwardVector.clone().multiplyScalar(dt);
         this.mesh.position.add(movement);*/
     }
+
+    position(val) {
+        if (val == undefined) {
+            return this.refs.group.position;
+        }
+
+        if (Array.isArray(val)) {
+            this.mesh.position.set(val[0], val[1], val[2]);
+        } else {
+            this.mesh.position.set(val.x, val.y, val.z);
+        }
+    }
 }

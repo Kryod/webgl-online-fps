@@ -5,6 +5,7 @@ import NetworkManager from "../NetworkManager.js";
 
 // Behaviours
 import Cube from "../behaviours/Cube.js";
+import Projectile from "../behaviours/Projectile.js";
 import CharacterController from "../behaviours/CharacterController.js";
 
 export default class MainScene extends Scene {
@@ -145,15 +146,23 @@ export default class MainScene extends Scene {
             }
         }
 
-        for (var projectile in state.projectiles) {
+        for (var id in state.projectiles) {
 
-            var proj = state.projectiles[projectile.id];
-            console.log("checking projectiles");
+            var proj = state.projectiles[id];
             if (!this.projectiles.hasOwnProperty(id)) {
                 // Instantiating new projectiles
-                this.projectiles[projectile.id] = new Projectile(this.scene, projectile.pos, forwardVector, 0.1, 20);
+                var create = true;
+                for (var id2 in this.projectiles){
+                    if (this.projectiles[id2].id == proj.id)
+                        create = false;
+                }
+                if (create)
+                {
+                    this.projectiles[proj.id] = new Projectile(this, proj.pos, new THREE.Vector3(), 0.1, 20);
+                    console.log("creating a ball");
+                }
             }
-            this.projectiles[projectile.id].position(proj.pos);
+            this.projectiles[proj.id].position(proj.pos);
         }
     }
 }
