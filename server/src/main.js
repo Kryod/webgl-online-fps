@@ -1,7 +1,6 @@
 const fs = require("fs");
 const config = require("../config");
 const maths = require("math.gl");
-<<<<<<< HEAD
 const cannon = require("cannon");
 const util = require("util");
 
@@ -19,9 +18,6 @@ if (config.https === false) {
     });
 }
 const io = require("socket.io")(server);
-=======
-const util = require('util');
->>>>>>> dee51e0a283b281f41c95945872914210d1f8bcb
 
 
 const projectile = {
@@ -36,10 +32,7 @@ var id_projectile = 0;
 
 var state = {
     "players": {},
-<<<<<<< HEAD
     "bodies": {},
-=======
->>>>>>> dee51e0a283b281f41c95945872914210d1f8bcb
     "projectiles": {}
 };
 
@@ -58,29 +51,16 @@ io.on("connection", client => {
         client.data.rotation = data.rot;
     });
 
-<<<<<<< HEAD
     var pos = client.data.body.position;
     client.on("fire", data => {
         var made_projectile = Object.create(projectile);
         made_projectile.pos = { "x": pos.x, "y": pos.z - 0.5, "z": pos.y };
-=======
-    client.on("fire", data => {
-        var made_projectile = Object.create(projectile);
-        made_projectile.pos = new maths.Vector3(data.position.x, data.position.y, data.position.z);
-
-        console.log("obj=" + util.inspect(data.forwardVector, false, null, true));
->>>>>>> dee51e0a283b281f41c95945872914210d1f8bcb
         made_projectile.forwardVector = new maths.Vector3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z);
         made_projectile.from = client.id;
         made_projectile.id = id_projectile;
         state.projectiles[id_projectile] = made_projectile;
 
-<<<<<<< HEAD
         id_projectile++;
-=======
-        console.log(`added projectile ${made_projectile} with id ${id_projectile}`);
-        id_projectile = id_projectile+1;
->>>>>>> dee51e0a283b281f41c95945872914210d1f8bcb
     });
 
     client.on("disconnect", () => {

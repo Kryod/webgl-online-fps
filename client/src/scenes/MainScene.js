@@ -3,10 +3,6 @@ import LoaderManager from "../LoaderManager.js";
 import NetworkManager from "../NetworkManager.js";
 
 // Behaviours
-<<<<<<< HEAD
-=======
-import Cube from "../behaviours/Cube.js";
->>>>>>> dee51e0a283b281f41c95945872914210d1f8bcb
 import Projectile from "../behaviours/Projectile.js";
 import CharacterController from "../behaviours/CharacterController.js";
 
@@ -100,16 +96,8 @@ export default class MainScene extends Scene {
         this.add(this.ball);
     }
 
-<<<<<<< HEAD
     setupPlayer() {
         var id = NetworkManager.id();
-=======
-    spawnPlayer() {
-        this.characters = {};
-        this.projectiles= {};
-        this.characterController = new CharacterController(this);
-    }
->>>>>>> dee51e0a283b281f41c95945872914210d1f8bcb
 
         this.characters = {};
         this.projectiles = {};
@@ -149,14 +137,9 @@ export default class MainScene extends Scene {
             }
         }
 
-<<<<<<< HEAD
         this.ball.position.set(state.ball[0], state.ball[1], state.ball[2]);
 
         for (var id in state.projectiles) {
-=======
-        for (var id in state.projectiles) {
-
->>>>>>> dee51e0a283b281f41c95945872914210d1f8bcb
             var proj = state.projectiles[id];
             if (!this.projectiles.hasOwnProperty(id)) {
                 var create = true;
