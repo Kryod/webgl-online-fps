@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/Kryod/ouaibe-gleu-rezo#readme",
   "dependencies": {
+    "cannon": "^0.6.2",
     "math.gl": "^2.3.3",
     "socket.io": "^2.2.0"
   }

@@ -3,7 +3,6 @@ import LoaderManager from "../LoaderManager.js";
 import NetworkManager from "../NetworkManager.js";
 
 // Behaviours
-import Cube from "../behaviours/Cube.js";
 import CharacterController from "../behaviours/CharacterController.js";
 
 export default class MainScene extends Scene {
@@ -17,9 +16,8 @@ export default class MainScene extends Scene {
         this.setupLighting();
         this.setupSky();
         this.spawnGround();
-        this.spawnPlayer();
         this.test();
-        this.setupNetwork();
+        this.setupPlayer();
     }
 
     setupScene() {
@@ -91,26 +89,23 @@ export default class MainScene extends Scene {
     }
 
     test() {
-        this.cube = new Cube(this, 3.0);
+        this.ball = new THREE.Mesh(new THREE.SphereBufferGeometry(0.5), new THREE.MeshPhongMaterial({ "color": 0xff0505 }));
+        this.ball.castShadow = true;
+        this.ball.receiveShadow = true;
+        this.add(this.ball);
     }
 
-    spawnPlayer() {
-        this.characters = {};
-        this.characterController = new CharacterController(this, this.nickname);
-    }
-
-    setupNetwork() {
+    setupPlayer() {
         var id = NetworkManager.id();
 
-        this.characterController.refs.networkCharacter.playerId = id;
+        this.characters = {};
+        this.characterController = new CharacterController(this, id, this.nickname);
         this.characters[id] = this.characterController;
 
         NetworkManager.on("state", this.onNetworkState.bind(this));
     }
 
     onNetworkState(state) {
-        this.characterController.refs.networkCharacter.onNetworkState(state);
-
         for (var id in state.players) {
             if (!state.players.hasOwnProperty(id)) {
                 continue;
@@ -119,7 +114,7 @@ export default class MainScene extends Scene {
             var player = state.players[id];
             if (!this.characters.hasOwnProperty(id)) {
                 // A new player joined, add their character to the scene
-                this.characters[id] = new CharacterController(this, player.nickname, false);
+                this.characters[id] = new CharacterController(this, id, player.nickname, false);
             }
 
             if (!this.characters[id].localPlayer) {
@@ -139,5 +134,7 @@ export default class MainScene extends Scene {
                 delete this.characters[id];
             }
         }
+
+        this.ball.position.set(state.ball[0], state.ball[1], state.ball[2]);
     }
 }

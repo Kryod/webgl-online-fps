@@ -7,7 +7,7 @@ import NetworkCharacter from "./NetworkCharacter.js";
 var otherCharacters = [];
 
 export default class CharacterController extends Behaviour {
-    constructor(scene, nickname, isLocalPlayer = true) {
+    constructor(scene, playerId, nickname, isLocalPlayer = true) {
         super(scene);
 
         var fbx = LoaderManager.get("soldier_ani.fbx");
@@ -34,7 +34,6 @@ export default class CharacterController extends Behaviour {
         if (isLocalPlayer) {
             group.add(scene.camera);
             scene.camera.position.set(0, 1.75, 0);
-            this.refs.networkCharacter = new NetworkCharacter(scene, this);
         } else {
             var font = LoaderManager.get("lato.json");
             var textGeometry = new THREE.TextGeometry(nickname, {
@@ -81,6 +80,7 @@ export default class CharacterController extends Behaviour {
         this.refs.camera = scene.camera;
 
         this.isLocalPlayer = isLocalPlayer === true;
+        this.refs.networkCharacter = new NetworkCharacter(scene, playerId, this);
         this.keybindings = scene.keybindings;
     }
 
@@ -102,7 +102,7 @@ export default class CharacterController extends Behaviour {
         this.updateAnimations(dt);
         this.mixer.update(dt);
 
-        if (!InputManager.isPointerLocked() || !this.isLocalPlayer) {
+        if (!this.isLocalPlayer) {
             return;
         }
 
@@ -110,6 +110,10 @@ export default class CharacterController extends Behaviour {
             var targetPos = this.position();
             targetPos.y = 2.5;
             otherCharacter.refs.nicknameTextMesh.lookAt(targetPos);
+        }
+
+        if (!InputManager.isPointerLocked()) {
+            return;
         }
 
         if (InputManager.getButtonDown(InputManager.MOUSE_LEFT_BUTTON)) {

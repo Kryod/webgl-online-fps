@@ -3,11 +3,12 @@ export default class Behaviour {
         this.refs = {};
         this.scene = scene;
         this.enabled = true;
+        this.started = false;
         this.addToScene();
     }
 
     addToScene() {
-        this.scene.behaviours.push(this);
+        this.scene.addBehaviour(this);
     }
 
     destroy() {

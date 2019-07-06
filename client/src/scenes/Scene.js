@@ -11,6 +11,7 @@ export default class Scene extends THREE.Scene {
         this.behaviours.forEach(behaviour => {
             if (behaviour.enabled === true) {
                 behaviour.start();
+                behaviour.started = true;
             }
         });
     }
@@ -22,6 +23,10 @@ export default class Scene extends THREE.Scene {
     update(dt) {
         this.behaviours.forEach(behaviour => {
             if (behaviour.enabled === true) {
+                if (!behaviour.started) {
+                    behaviour.start();
+                    behaviour.started = true;
+                }
                 behaviour.update(dt);
             }
         });
