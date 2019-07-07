@@ -161,12 +161,18 @@ function mainLoop() {
             continue;
         }
 
+        state.projectiles[key].timer += dt;
+        if (state.projectiles[key].timer >= 6.0) {
+            delete state.projectiles[key];
+            continue;
+        }
+
         var proj = state.projectiles[key];
         var fwdV = proj.forwardVector;
-        console.log("fwdV=" + util.inspect(fwdV, false, null, true));
+        //console.log("fwdV=" + util.inspect(fwdV, false, null, true));
         var movement = fwdV.clone().scale(dt);
 
-        console.log("obj=" + util.inspect(movement, false, null, true));
+        //console.log("obj=" + util.inspect(proj.pos, false, null, true));
         proj.pos.add(movement);
     }
 
@@ -205,18 +211,6 @@ function stripState() {
             continue;
         }
 
-        stripped.projectiles[key] = {
-            "id": state.projectiles[key].id,
-            "pos": state.projectiles[key].pos,
-        };
-    }
-
-    for (var key in state.projectiles) {
-        if (!state.projectiles.hasOwnProperty(key)) {
-            continue;
-        }
-
-        //var movement = state.projectiles[key].data.movement || new maths.Vector3();
         stripped.projectiles[key] = {
             "id": state.projectiles[key].id,
             "pos": state.projectiles[key].pos,

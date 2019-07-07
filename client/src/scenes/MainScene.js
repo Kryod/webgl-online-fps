@@ -142,20 +142,27 @@ export default class MainScene extends Scene {
         for (var id in state.projectiles) {
             var proj = state.projectiles[id];
             if (!this.projectiles.hasOwnProperty(id)) {
-                var create = true;
                 //checking in existing projectiles if current one is already spawned
-                for (var id2 in this.projectiles){
-                    if (this.projectiles[id2].id == proj.id){
-                        // if he is spawned
-                        create = false;
-                        this.projectiles[id2].position(proj.pos);
-                    }
+                this.projectiles[proj.id] = new Projectile(this, proj.pos, new THREE.Vector3(), 0.1, 10, proj.id);
+            }
+
+            for (var id2 in this.projectiles){
+                if (this.projectiles[id2].id == proj.id){
+                    // if prjectile exist, update position
+                    this.projectiles[id2].position(proj.pos);
                 }
-                if (create)
-                {
-                    this.projectiles[proj.id] = new Projectile(this, proj.pos, new THREE.Vector3(), 0.1, 20, proj.id);
-                    console.log("creating a ball");
-                }
+            }
+        }
+
+        for (var id in this.projectiles) {
+            if (!this.projectiles.hasOwnProperty(id)) {
+                continue;
+            }
+
+            if (!state.projectiles.hasOwnProperty(id)) {
+                // A player disconnected, remove their character from the scene
+                this.projectiles[id].destroy();
+                delete this.projectiles[id];
             }
         }
     }

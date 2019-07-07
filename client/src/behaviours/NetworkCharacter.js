@@ -41,6 +41,7 @@ export default class NetworkCharacter extends Behaviour {
                 var forwardVector = new THREE.Vector3();
                 this.refs.camera.getWorldDirection(forwardVector);
                 this.refs.camera.getWorldPosition(pos);
+                forwardVector = forwardVector.multiplyScalar(5);
                 NetworkManager.send("fire", {
                     "forwardVector": forwardVector,
                 });
