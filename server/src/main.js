@@ -169,10 +169,7 @@ function mainLoop() {
 
         var proj = state.projectiles[key];
         var fwdV = proj.forwardVector;
-        //console.log("fwdV=" + util.inspect(fwdV, false, null, true));
         var movement = fwdV.clone().scale(dt);
-
-        //console.log("obj=" + util.inspect(proj.pos, false, null, true));
         proj.pos.add(movement);
     }
 

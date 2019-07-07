@@ -37,10 +37,8 @@ export default class NetworkCharacter extends Behaviour {
             }
 
             if (InputManager.getButtonDown(InputManager.MOUSE_LEFT_BUTTON)) {
-                var pos = new THREE.Vector3();
                 var forwardVector = new THREE.Vector3();
                 this.refs.camera.getWorldDirection(forwardVector);
-                this.refs.camera.getWorldPosition(pos);
                 forwardVector = forwardVector.multiplyScalar(5);
                 NetworkManager.send("fire", {
                     "forwardVector": forwardVector,
