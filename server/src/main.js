@@ -25,7 +25,8 @@ const projectile = {
     pos: 0,
     forwardVector: new maths.Vector3(0),
     timer: 0,
-    from: 0
+    from: 0,
+    body: undefined,
 };
 
 var id_projectile = 0;
@@ -58,6 +59,18 @@ io.on("connection", client => {
         made_projectile.forwardVector = new maths.Vector3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z);
         made_projectile.from = client.id;
         made_projectile.id = id_projectile;
+        var body = new cannon.Body({
+            "mass": 0.1,
+            "position": new cannon.Vec3(pos.x, pos.y - 0.5, pos.z),
+            "shape": new cannon.Sphere(0.25),
+            "velocity": new cannon.Vec3(data.forwardVector.x, data.forwardVector.z, data.forwardVector.y)
+        });
+        world.add(body);
+        body.collisionResponse = 0;
+        body.addEventListener("collide", function(e) {
+            console.log("colision");
+        })
+
         state.projectiles[id_projectile] = made_projectile;
 
         id_projectile++;
