@@ -28,7 +28,7 @@ const projectile = {
     from: 0
 };
 
-var id_projectile = 0;
+var idProjectile = 0;
 
 var state = {
     "players": {},
@@ -39,7 +39,7 @@ var state = {
 io.on("connection", client => {
     client.data = {
         "nickname": client.handshake.query.nickname || "",
-        "body": createPlayerBody(new maths.Vector3(0, 3, 15)),
+        "body": createPlayerBody(new maths.Vector3(0, 10, 0)),
     };
     state.players[client.id] = client;
 
@@ -53,14 +53,14 @@ io.on("connection", client => {
 
     var pos = client.data.body.position;
     client.on("fire", data => {
-        var made_projectile = Object.create(projectile);
-        made_projectile.pos = new maths.Vector3(pos.x, pos.z - 0.05, pos.y);
-        made_projectile.forwardVector = new maths.Vector3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z);
-        made_projectile.from = client.id;
-        made_projectile.id = id_projectile;
-        state.projectiles[id_projectile] = made_projectile;
+        var newProjectile = Object.create(projectile);
+        newProjectile.pos = new maths.Vector3(pos.x, pos.y - 0.05, pos.z);
+        newProjectile.forwardVector = new maths.Vector3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z);
+        newProjectile.from = client.id;
+        newProjectile.id = idProjectile;
+        state.projectiles[idProjectile] = newProjectile;
 
-        id_projectile++;
+        idProjectile++;
     });
 
     client.on("disconnect", () => {
@@ -72,7 +72,7 @@ io.on("connection", client => {
 var world;
 function setupPhysics() {
     world = new cannon.World();
-    world.gravity.set(0, 0, -9.81);
+    world.gravity.set(0, -9.81, 0);
     world.quatNormalizeSkip = 0;
     world.quatNormalizeFast = false;
 
@@ -99,13 +99,14 @@ function createGround() {
         "shape": new cannon.Plane(),
         "mass": 0,
     });
+    body.quaternion.setFromEuler(-Math.PI / 2, 0, 0, "XYZ");
     world.add(body);
 }
 
 function createBall() {
     var body = new cannon.Body({
         "mass": 1,
-        "position": new cannon.Vec3(0, 0, 300),
+        "position": new cannon.Vec3(0, 300, 0),
         "shape": new cannon.Sphere(0.5),
     });
     world.add(body);
@@ -117,8 +118,8 @@ function createPlayerBody(pos) {
         "mass": 60,
         "linearDamping": 0.95,
         "fixedRotation": true,
-        "position": new cannon.Vec3(pos.x, pos.z, pos.y),
-        "shape": new cannon.Box(new cannon.Vec3(0.5, 0.5, 1.8)),
+        "position": new cannon.Vec3(pos.x, pos.y, pos.z),
+        "shape": new cannon.Box(new cannon.Vec3(0.5, 1.8, 0.5)),
     });
     world.add(body);
     return body;
@@ -152,7 +153,7 @@ function mainLoop() {
                 "radians": -player.data.rotation,
             });
             player.data.body.position.x += mov.x;
-            player.data.body.position.y += mov.y;
+            player.data.body.position.z += mov.y;
         }
     }
 
@@ -191,7 +192,7 @@ function stripState() {
         var movement = playerData.movement || new maths.Vector3();
         var pos = playerData.body.position;
         stripped.players[key] = {
-            "pos": [ pos.x, pos.z - 1.8, pos.y ],
+            "pos": [ pos.x, pos.y - 1.8, pos.z ],
             "rot": playerData.rotation,
             "moving": movement.x != 0 || movement.z != 0,
             "nickname": playerData.nickname,
@@ -200,7 +201,7 @@ function stripState() {
 
     {
         var pos = state.bodies["ball"].position;
-        stripped["ball"] = [ pos.x, pos.z, pos.y ];
+        stripped["ball"] = [ pos.x, pos.y, pos.z ];
     }
 
     for (var key in state.projectiles) {

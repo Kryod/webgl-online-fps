@@ -26,6 +26,150 @@ export default class MainScene extends Scene {
     setupScene() {
         this.background = new THREE.Color().setHSL(0.6, 0.0, 1.0);
         this.fog = new THREE.Fog(this.background, 1, 150);
+
+        //this.generateRandomLevel();
+        this.loadLevel();
+    }
+
+    clearLevel() {
+        if (this.boxes != undefined) {
+            for (var box of this.boxes) {
+                this.remove(box);
+            }
+        }
+        this.boxes = [];
+    }
+
+    generateRandomLevel() {
+        this.clearLevel();
+
+        function randInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function randFloat(min, max, decimals = 2) {
+            var rand = Math.random() * (max - min) + min;
+            var power = Math.pow(10, decimals);
+            return Math.floor(rand * power) / power;
+        }
+
+        var positionsDist = 20;
+        var level = {
+            "boxes": [],
+            "crates": [],
+        };
+        var n = randInt(4, 10);
+        for (var i = 0; i < n; ++i) {
+            var box = LoaderManager.get("box.fbx").clone();
+            box.children.forEach(function(child) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+
+                if (child.material !== undefined) {
+                    child.material.map = LoaderManager.get("box_albedotransparency.png");
+                    child.material.normalMap = LoaderManager.get("box_normal.png");
+                    child.material.aoMap = LoaderManager.get("box_ao.png");
+                    child.material.metalnessMap = LoaderManager.get("box_metallicsmoothness.png");
+                    child.material.needsUpdate = true;
+                }
+            });
+
+            var x = randFloat(-positionsDist, positionsDist);
+            var z = randFloat(-positionsDist, positionsDist);
+            box.position.set(x, 0.0, z);
+
+            var rot = randFloat(0, 360);
+            box.rotation.y = rot * Math.PI / 180.0;
+
+            var scale = randFloat(0.008, 0.02, 4);
+            box.scale.set(scale, scale, scale);
+
+            this.add(box);
+            level.boxes.push({
+                "x": x,
+                "z": z,
+                "rotation": rot,
+                "scale": scale,
+            });
+            this.boxes.push(box);
+        }
+
+        n = randInt(4, 10);
+        for (var i = 0; i < n; ++i) {
+            var crate = LoaderManager.get("crate.fbx").clone();
+            crate.children.forEach(function(child) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+            });
+
+            var x = randFloat(-positionsDist, positionsDist);
+            var z = randFloat(-positionsDist, positionsDist);
+            crate.position.set(x, 0.0, z);
+
+            var rot = randFloat(0, 360);
+            crate.rotation.y = rot * Math.PI / 180.0;
+
+            var scale = randFloat(0.004, 0.008, 4);
+            crate.scale.set(scale, scale, scale);
+
+            this.add(crate);
+            level.crates.push({
+                "x": x,
+                "z": z,
+                "rotation": rot,
+                "scale": scale,
+            });
+            this.boxes.push(crate);
+        }
+
+        console.log(JSON.stringify(level));
+    }
+
+    loadLevel() {
+        this.clearLevel();
+
+        var level = LoaderManager.get("level.json");
+        level = JSON.parse(level);
+
+        for (var boxData of level.boxes) {
+            var box = LoaderManager.get("box.fbx").clone();
+            box.children.forEach(function(child) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+
+                if (child.material !== undefined) {
+                    child.material.map = LoaderManager.get("box_albedotransparency.png");
+                    child.material.normalMap = LoaderManager.get("box_normal.png");
+                    child.material.aoMap = LoaderManager.get("box_ao.png");
+                    child.material.metalnessMap = LoaderManager.get("box_metallicsmoothness.png");
+                    child.material.needsUpdate = true;
+                }
+            });
+
+            box.position.set(boxData.x, 0.0, boxData.z);
+            box.rotation.y = boxData.rotation * Math.PI / 180.0;
+            box.scale.set(boxData.scale, boxData.scale, boxData.scale);
+
+            this.add(box);
+            this.boxes.push(box);
+        }
+
+        for (var boxData of level.crates) {
+            var crate = LoaderManager.get("crate.fbx").clone();
+            crate.children.forEach(function(child) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+            });
+
+            crate.position.set(boxData.x, 0.0, boxData.z);
+            crate.rotation.y = boxData.rotation * Math.PI / 180.0;
+            crate.scale.set(boxData.scale, boxData.scale, boxData.scale);
+
+            this.add(crate);
+            this.boxes.push(crate);
+        }
     }
 
     setupLighting() {

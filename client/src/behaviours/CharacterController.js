@@ -59,6 +59,14 @@ export default class CharacterController extends Behaviour {
         }
         scene.add(group);
 
+        var rifle = LoaderManager.get("rifle.gltf").scene.clone();
+        rifle.position.set(0.0, 0.0, 1.0);
+        rifle.scale.set(6.0, 6.0, 6.0);
+        rifle.rotation.x = -Math.PI / 2;
+        rifle.rotation.y = Math.PI / 2;
+        var rightHand = model.children[0].children[1].children[2].children[0].children[0].children[0].children[0].children[0].children[0];
+        rightHand.add(rifle);
+
         this.mixer = new THREE.AnimationMixer(model);
         this.clips = [];
         for (var anim of fbx.animations) {
@@ -110,6 +118,10 @@ export default class CharacterController extends Behaviour {
     update(dt) {
         this.updateAnimations(dt);
         this.mixer.update(dt);
+
+        if (InputManager.getKeyUp("g")) {
+            this.scene.generateRandomLevel();
+        }
 
         if (!this.isLocalPlayer) {
             return;
