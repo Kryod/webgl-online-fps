@@ -251,6 +251,7 @@ export default class MainScene extends Scene {
         this.characters[id] = this.characterController;
 
         NetworkManager.on("state", this.onNetworkState.bind(this));
+        NetworkManager.on("killFeed", this.onNetworkKillFeed.bind(this));
     }
 
     onNetworkState(state) {
@@ -262,7 +263,7 @@ export default class MainScene extends Scene {
             var player = state.players[id];
             if (!this.characters.hasOwnProperty(id)) {
                 // A new player joined, add their character to the scene
-                this.characters[id] = new CharacterController(this, id, player.nickname, false);
+                this.characters[id] = new CharacterController(this, id, player.nickname, false, player.lp);
             }
 
             if (!this.characters[id].localPlayer) {
@@ -311,6 +312,10 @@ export default class MainScene extends Scene {
                 delete this.projectiles[id];
             }
         }
+    }
+
+    onNetworkKillFeed(killFeed) {
+        console.log(killFeed);
     }
 
     setupUi() {

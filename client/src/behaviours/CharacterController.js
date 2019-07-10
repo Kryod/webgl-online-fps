@@ -6,7 +6,7 @@ import NetworkCharacter from "./NetworkCharacter.js";
 var otherCharacters = [];
 
 export default class CharacterController extends Behaviour {
-    constructor(scene, playerId, nickname, isLocalPlayer = true) {
+    constructor(scene, playerId, nickname, isLocalPlayer = true, lp) {
         super(scene);
 
         var fbx = LoaderManager.get("soldier_ani.fbx");
@@ -90,6 +90,7 @@ export default class CharacterController extends Behaviour {
         this.nickname = nickname;
         this.refs.networkCharacter = new NetworkCharacter(scene, playerId, this, this.refs.camera);
         this.keybindings = scene.keybindings;
+        this.lp = lp;
     }
 
     start() {

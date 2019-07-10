@@ -40,7 +40,8 @@ var state = {
 io.on("connection", client => {
     client.data = {
         "nickname": client.handshake.query.nickname || "",
-        "body": createPlayerBody(new maths.Vector3(0, 10, 0)),
+        "body": createPlayerBody(new maths.Vector3(0, 10, 0), client.id),
+        "lp": 100,
     };
     state.players[client.id] = client;
 
@@ -61,16 +62,13 @@ io.on("connection", client => {
         newProjectile.id = idProjectile;
         var body = new cannon.Body({
             "mass": 0.1,
-            "position": new cannon.Vec3(newProjectile.pos.x, newProjectile.pos.y, newProjectile.pos.z),
+            "position": new cannon.Vec3(newProjectile.pos.x, newProjectile.pos.y - 0.05, newProjectile.pos.z),
             "shape": new cannon.Sphere(0.25),
-            "velocity": new cannon.Vec3(data.forwardVector.x, data.forwardVector.z, data.forwardVector.y),
+            "velocity": new cannon.Vec3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z).scale(10),
         });
         world.add(body);
         body.collisionResponse = 0;
-        body.addEventListener("collide", function(e) {
-            console.log("colision");
-        })
-
+        newProjectile.body = body;
         state.projectiles[idProjectile] = newProjectile;
 
         idProjectile++;
@@ -126,7 +124,7 @@ function createBall() {
     state.bodies["ball"] = body;
 }
 
-function createPlayerBody(pos) {
+function createPlayerBody(pos, clientId) {
     var body = new cannon.Body({
         "mass": 60,
         "linearDamping": 0.95,
@@ -135,6 +133,36 @@ function createPlayerBody(pos) {
         "shape": new cannon.Box(new cannon.Vec3(0.5, 1.8, 0.5)),
     });
     world.add(body);
+
+    body.addEventListener("collide", function(e) {
+        var projectileBodyId = e.body.id;
+
+        for (var key in state.projectiles) {
+            var projectil = state.projectiles[key];
+            if (projectil.body.id == projectileBodyId){
+                console.log("trueProjectileId: "+ projectil.id);
+                if (projectil.from == clientId) {
+                    console.log("collision with shooter");
+                }else {
+                    state.players[clientId].data.lp -= 20;
+
+                    console.log("current player lp:" + state.players[clientId].data.lp);
+                    console.log("player id" + state.players[clientId].id);
+                    if (state.players[clientId].data.lp <= 0){
+                        var killFeed = { 
+                            "killed": clientId,
+                            "by": projectil.from,
+                        };
+
+                        io.emit("killFeed", killFeed);
+                        console.log("Player "+ clientId+" was killed by " + projectil.from);
+                    }
+                    console.log("hitting a player or some other thing");
+                }
+            }
+        }
+        
+    })
     return body;
 }
 
@@ -171,7 +199,14 @@ function mainLoop() {
     }
 
     for (var key in state.projectiles) {
-        if (!state.projectiles.hasOwnProperty(key)) {
+        state.projectiles[key].timer += dt;
+        if (state.projectiles[key].timer >= 6.0) {
+            delete state.projectiles[key];
+            continue;
+        }
+        var proj = state.projectiles[key];
+        proj.pos = proj.body.position;
+        /*if (!state.projectiles.hasOwnProperty(key)) {
             continue;
         }
 
@@ -184,10 +219,11 @@ function mainLoop() {
         var proj = state.projectiles[key];
         var fwdV = proj.forwardVector;
         var movement = fwdV.clone().scale(dt);
-        proj.pos.add(movement);
+        proj.pos.add(movement);*/
     }
 
     io.emit("state",  stripState());
+
 }
 
 function stripState() {
@@ -209,6 +245,7 @@ function stripState() {
             "rot": playerData.rotation,
             "moving": movement.x != 0 || movement.z != 0,
             "nickname": playerData.nickname,
+            "lp": playerData.lp,
         };
     }
 
