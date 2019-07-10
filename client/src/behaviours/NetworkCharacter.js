@@ -44,7 +44,14 @@ export default class NetworkCharacter extends Behaviour {
     }
 
     onNetworkState(state) {
+        if (!this.enabled) {
+            return;
+        }
+
         this.prevTarget = this.nextTarget;
+        if (state.players[this.playerId] === undefined) {
+            return;
+        }
         var pos = state.players[this.playerId].pos;
         this.nextTarget = new THREE.Vector3(pos[0], pos[1], pos[2]);
         this.lerpProgress = 0.0;

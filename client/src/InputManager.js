@@ -5,6 +5,8 @@ var mouseMovement = { "x": 0.0, "y": 0.0 };
 var buttonsDown = {};
 var lastFrameButtons = {};
 var pointerLocked = false;
+var onPointerLockedCallbacks = [];
+var onPointerUnlockedCallbacks = [];
 
 $(document).on("keydown", function(e) {
     keysDown[e.key] = true;
@@ -59,8 +61,18 @@ document.addEventListener("pointerlockchange", function(e) {
     pointerLocked = document.pointerLockElement === domElement;
 
     if (!pointerLocked) {
+        for (var fn of onPointerUnlockedCallbacks) {
+            if (typeof fn == "function") {
+                fn();
+            }
+        }
         $("#pause-container").show();
     } else {
+        for (var fn of onPointerLockedCallbacks) {
+            if (typeof fn == "function") {
+                fn();
+            }
+        }
         $("#pause-container").hide();
     }
 }, false);
@@ -129,6 +141,14 @@ export default {
 
     disablePointerLock() {
         document.removeEventListener("mousedown", onMouseDown, false);
+    },
+
+    onPointerLocked(fn) {
+        onPointerLockedCallbacks.push(fn);
+    },
+
+    onPointerUnlocked(fn) {
+        onPointerUnlockedCallbacks.push(fn);
     },
 
     requestPointerLock() {

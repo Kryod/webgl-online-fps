@@ -80,6 +80,7 @@ export default class CharacterController extends Behaviour {
         this.refs.camera = scene.camera;
 
         this.isLocalPlayer = isLocalPlayer === true;
+        this.nickname = nickname;
         this.refs.networkCharacter = new NetworkCharacter(scene, playerId, this);
         this.keybindings = scene.keybindings;
     }
@@ -90,12 +91,21 @@ export default class CharacterController extends Behaviour {
         this.euler = new THREE.Euler(0, 0, 0, "YXZ");
 
         InputManager.on("mousemove", this.onMouseMove.bind(this), false);
+        InputManager.onPointerLocked(function() {
+            $("#crosshair").show();
+        });
+        InputManager.onPointerUnlocked(function() {
+            $("#crosshair").hide();
+        });
+        InputManager.enablePointerLock();
+        InputManager.requestPointerLock();
     }
 
     destroy() {
         super.destroy();
         InputManager.off("mousemove", this.onMouseMove.bind(this), false);
         this.scene.remove(this.refs.group);
+        this.refs.networkCharacter.destroy();
     }
 
     update(dt) {

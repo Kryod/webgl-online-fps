@@ -39,6 +39,7 @@ io.on("connection", client => {
     });
 
     client.on("disconnect", () => {
+        world.remove(client.data.body);
         delete state.players[client.id];
     });
 });
@@ -56,7 +57,6 @@ function setupPhysics() {
 
     solver.iterations = 7;
     solver.tolerance = 0.1;
-    var split = true;
     world.solver = solver;
 
     world.broadphase = new cannon.NaiveBroadphase();

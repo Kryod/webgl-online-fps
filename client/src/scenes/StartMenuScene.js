@@ -117,9 +117,6 @@ export default class StartMenuScene extends Scene {
                 "keybindings": _this.binds,
             });
         });
-
-        InputManager.enablePointerLock();
-        InputManager.requestPointerLock();
     }
 
     nickname() {
