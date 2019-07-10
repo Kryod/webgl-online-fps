@@ -3,6 +3,7 @@ import LoaderManager from "../LoaderManager.js";
 import NetworkManager from "../NetworkManager.js";
 
 // Behaviours
+import Projectile from "../behaviours/Projectile.js";
 import CharacterController from "../behaviours/CharacterController.js";
 
 export default class MainScene extends Scene {
@@ -99,6 +100,7 @@ export default class MainScene extends Scene {
         var id = NetworkManager.id();
 
         this.characters = {};
+        this.projectiles = {};
         this.characterController = new CharacterController(this, id, this.nickname);
         this.characters[id] = this.characterController;
 
@@ -136,5 +138,32 @@ export default class MainScene extends Scene {
         }
 
         this.ball.position.set(state.ball[0], state.ball[1], state.ball[2]);
+
+        for (var id in state.projectiles) {
+            var proj = state.projectiles[id];
+            if (!this.projectiles.hasOwnProperty(id)) {
+                //checking in existing projectiles if current one is already spawned
+                this.projectiles[proj.id] = new Projectile(this, proj.pos, new THREE.Vector3(), 0.1, 10, proj.id);
+            }
+
+            for (var id2 in this.projectiles){
+                if (this.projectiles[id2].id == proj.id){
+                    // if prjectile exist, update position
+                    this.projectiles[id2].position(proj.pos);
+                }
+            }
+        }
+
+        for (var id in this.projectiles) {
+            if (!this.projectiles.hasOwnProperty(id)) {
+                continue;
+            }
+
+            if (!state.projectiles.hasOwnProperty(id)) {
+                // A player disconnected, remove their character from the scene
+                this.projectiles[id].destroy();
+                delete this.projectiles[id];
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@ const fs = require("fs");
 const config = require("../config");
 const maths = require("math.gl");
 const cannon = require("cannon");
+const util = require("util");
 
 var server = null;
 if (config.https === false) {
@@ -18,9 +19,21 @@ if (config.https === false) {
 }
 const io = require("socket.io")(server);
 
+
+const projectile = {
+    id: 0,
+    pos: 0,
+    forwardVector: new maths.Vector3(0),
+    timer: 0,
+    from: 0
+};
+
+var id_projectile = 0;
+
 var state = {
     "players": {},
     "bodies": {},
+    "projectiles": {}
 };
 
 io.on("connection", client => {
@@ -36,6 +49,18 @@ io.on("connection", client => {
         client.data.movement = mov;
 
         client.data.rotation = data.rot;
+    });
+
+    var pos = client.data.body.position;
+    client.on("fire", data => {
+        var made_projectile = Object.create(projectile);
+        made_projectile.pos = new maths.Vector3(pos.x, pos.z - 0.5, pos.y);
+        made_projectile.forwardVector = new maths.Vector3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z);
+        made_projectile.from = client.id;
+        made_projectile.id = id_projectile;
+        state.projectiles[id_projectile] = made_projectile;
+
+        id_projectile++;
     });
 
     client.on("disconnect", () => {
@@ -131,12 +156,30 @@ function mainLoop() {
         }
     }
 
+    for (var key in state.projectiles) {
+        if (!state.projectiles.hasOwnProperty(key)) {
+            continue;
+        }
+
+        state.projectiles[key].timer += dt;
+        if (state.projectiles[key].timer >= 6.0) {
+            delete state.projectiles[key];
+            continue;
+        }
+
+        var proj = state.projectiles[key];
+        var fwdV = proj.forwardVector;
+        var movement = fwdV.clone().scale(dt);
+        proj.pos.add(movement);
+    }
+
     io.emit("state",  stripState());
 }
 
 function stripState() {
     var stripped = {
         "players": {},
+        "projectiles": {},
     };
 
     for (var key in state.players) {
@@ -158,6 +201,17 @@ function stripState() {
     {
         var pos = state.bodies["ball"].position;
         stripped["ball"] = [ pos.x, pos.z, pos.y ];
+    }
+
+    for (var key in state.projectiles) {
+        if (!state.projectiles.hasOwnProperty(key)) {
+            continue;
+        }
+
+        stripped.projectiles[key] = {
+            "id": state.projectiles[key].id,
+            "pos": state.projectiles[key].pos,
+        };
     }
 
     return stripped;

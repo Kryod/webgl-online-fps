@@ -1,12 +1,14 @@
 import Behaviour from "./Behaviour.js";
+import InputManager from "../InputManager.js";
 import NetworkManager from "../NetworkManager.js";
 
 export default class NetworkCharacter extends Behaviour {
-    constructor(scene, id, characterController) {
+    constructor(scene, id, characterController, camera) {
         super(scene);
 
         this.playerId = id;
         this.refs.characterController = characterController;
+        this.refs.camera = camera;
     }
 
     start() {
@@ -32,6 +34,15 @@ export default class NetworkCharacter extends Behaviour {
                 });
                 this.lastMovement = mov;
                 this.lastRotation = rot;
+            }
+
+            if (InputManager.getButtonDown(InputManager.MOUSE_LEFT_BUTTON)) {
+                var forwardVector = new THREE.Vector3();
+                this.refs.camera.getWorldDirection(forwardVector);
+                forwardVector = forwardVector.multiplyScalar(5);
+                NetworkManager.send("fire", {
+                    "forwardVector": forwardVector,
+                });
             }
         }
 
