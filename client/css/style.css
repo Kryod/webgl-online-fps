@@ -174,3 +174,37 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
 }
+
+#kill-feed {
+    position: absolute;
+    width: 300px;
+    top: 24px;
+    right: 24px;
+    text-align: right;
+}
+
+#kill-feed .entry {
+    display: inline-block;
+    height: 24px;
+    padding: 2px 8px;
+    border-radius: 4px;
+
+    background-color: rgba(20, 20, 20, 0.7);
+}
+
+#kill-feed .entry img {
+    height: 14px;
+    vertical-align: middle;
+    margin: 0px 12px;
+    opacity: 0.9;
+}
+
+#kill-feed .entry .blue {
+    color: #0288D1;
+    opacity: 0.9;
+}
+
+#kill-feed .entry .red {
+    color: #E53935;
+    opacity: 0.9;
+}

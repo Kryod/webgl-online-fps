@@ -3,6 +3,7 @@ import LoaderManager from "../LoaderManager.js";
 import NetworkManager from "../NetworkManager.js";
 
 // Behaviours
+import KillFeed from "../behaviours/KillFeed.js";
 import Projectile from "../behaviours/Projectile.js";
 import CharacterController from "../behaviours/CharacterController.js";
 
@@ -19,6 +20,7 @@ export default class MainScene extends Scene {
         this.spawnGround();
         this.test();
         this.setupPlayer();
+        this.setupUi();
     }
 
     setupScene() {
@@ -165,5 +167,9 @@ export default class MainScene extends Scene {
                 delete this.projectiles[id];
             }
         }
+    }
+
+    setupUi() {
+        this.killFeed = new KillFeed(this);
     }
 }
