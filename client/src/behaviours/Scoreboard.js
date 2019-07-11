@@ -5,6 +5,8 @@ import NetworkManager from "../NetworkManager.js";
 export default class Scoreboard extends Behaviour {
     start() {
         this.refs.$board = $("#scoreboard");
+        this.refs.$scores = $("#score .score");
+        $("#score").show();
         NetworkManager.on("scores", this.updateBoard.bind(this));
         NetworkManager.send("request-scores", {});
     }
@@ -25,8 +27,15 @@ export default class Scoreboard extends Behaviour {
 
         for (var teamIdx in scores.teams) {
             var team = scores.teams[teamIdx];
+
+            $(this.refs.$scores[teamIdx]).text(team.score);
+
             team.players.sort((a, b) => b.kills - a.kills);
             for (var player of team.players) {
+                if (!this.scene.characters.hasOwnProperty(player.id)) {
+                    continue;
+                }
+
                 var $row = $("<tr>");
                 var nickname = this.scene.characters[player.id].nickname;
                 $row.append(`<td>${nickname}</td>`);

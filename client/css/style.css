@@ -277,3 +277,29 @@ body {
 #scoreboard table.blue tr.me td {
     background-color: rgba(2, 136, 209, 0.2);
 }
+
+#score {
+    position: absolute;
+    top: 0%;
+    left: 50%;
+    width: 96px;
+    height: 48px;
+    transform: translate(-50%, 0%);
+    line-height: 48px;
+    text-align: center;
+}
+
+#score .score {
+    width: 50%;
+    height: 100%;
+}
+
+#score .score.blue {
+    float: left;
+    background-color: rgba(2, 136, 209, 0.6);
+}
+
+#score .score.red {
+    float: right;
+    background-color: rgba(229, 57, 53, 0.6);
+}

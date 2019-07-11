@@ -291,6 +291,7 @@ function stripState() {
             "moving": movement.x != 0 || movement.z != 0,
             "nickname": playerData.nickname,
             "lp": playerData.lp,
+            "team": playerData.team,
         };
     }
 

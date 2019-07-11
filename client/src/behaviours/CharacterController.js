@@ -6,10 +6,10 @@ import NetworkCharacter from "./NetworkCharacter.js";
 var otherCharacters = [];
 
 export default class CharacterController extends Behaviour {
-    constructor(scene, playerId, nickname, isLocalPlayer = true, lp) {
+    constructor(scene, playerId, nickname, skin, isLocalPlayer = true) {
         super(scene);
 
-        var fbx = LoaderManager.get("soldier_ani.fbx");
+        var fbx = LoaderManager.get(`soldier_${skin}.fbx`);
         var model = THREE.SkeletonUtils.clone(fbx);
         model.scale.set(0.117, 0.117, 0.117);
         model.quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0, "XYZ"));
@@ -18,7 +18,7 @@ export default class CharacterController extends Behaviour {
             child.receiveShadow = true;
 
             if (child.material !== undefined) {
-                child.material.normalMap = LoaderManager.get("soldier_NM.jpg");
+                child.material.normalMap = LoaderManager.get("soldier_normal.jpg");
                 child.material.roughnessMap = LoaderManager.get("soldier_rough.jpg");
                 child.material.metalnessMap = LoaderManager.get("soldier_metalness.jpg");
                 child.material.needsUpdate = true;
@@ -59,11 +59,11 @@ export default class CharacterController extends Behaviour {
         }
         scene.add(group);
 
-        var rifle = LoaderManager.get("rifle.gltf").scene.clone();
-        rifle.position.set(0.0, 0.0, 1.0);
+        var rifle = LoaderManager.get(`rifle_${skin}.gltf`).scene.clone();
+        rifle.position.set(-1.0, 0.0, 0.0);
         rifle.scale.set(6.0, 6.0, 6.0);
         rifle.rotation.x = -Math.PI / 2;
-        rifle.rotation.y = Math.PI / 2;
+        rifle.rotation.y = -Math.PI / 2;
         var rightHand = model.children[0].children[1].children[2].children[0].children[0].children[0].children[0].children[0].children[0];
         rightHand.add(rifle);
 
@@ -90,7 +90,7 @@ export default class CharacterController extends Behaviour {
         this.nickname = nickname;
         this.refs.networkCharacter = new NetworkCharacter(scene, playerId, this, this.refs.camera);
         this.keybindings = scene.keybindings;
-        this.lp = lp;
+        this.health = 100.0;
     }
 
     start() {
