@@ -196,18 +196,13 @@ function createPlayerBody(client) {
         for (var key in state.projectiles) {
             var projectil = state.projectiles[key];
             if (projectil.body.id == projectileBodyId) {
-                console.log("trueProjectileId: "+ projectil.id);
-                if (projectil.from == client.id) {
-                    console.log("collision with shooter");
-                } else if (client.data.health > 0) {
+                if (projectil.from != client.id && client.data.health > 0) {
                     client.data.health -= 20;
                     io.emit("health", {
                         "player": client.id,
                         "value": client.data.health,
                     });
 
-                    console.log("current player health:" + client.data.health);
-                    console.log("player id" + client.id);
                     if (client.data.health <= 0) {
                         var killFeed = {
                             "killed": client.id,
@@ -232,11 +227,9 @@ function createPlayerBody(client) {
 
                         io.emit("kill", killFeed);
                         sendScores();
-                        console.log("Player "+ client.id+" was killed by " + projectil.from);
 
                         respawnTick(client, 10);
                     }
-                    console.log("hitting a player or some other thing");
                 }
             }
         }
