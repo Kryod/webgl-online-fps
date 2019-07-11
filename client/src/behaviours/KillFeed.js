@@ -6,7 +6,7 @@ export default class KillFeed extends Behaviour {
         this.refs.$feed = $("#kill-feed");
         this.scores = {};
         NetworkManager.on("scores", this.onScores.bind(this));
-        NetworkManager.on("killFeed", this.onNetworkKillFeed.bind(this));
+        NetworkManager.on("kill", this.onNetworkKillFeed.bind(this));
     }
 
     showKill(killer, killed) {

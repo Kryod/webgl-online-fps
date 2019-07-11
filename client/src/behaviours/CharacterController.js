@@ -82,6 +82,11 @@ export default class CharacterController extends Behaviour {
         this.idleAction.setEffectiveWeight(0.0);
         this.idleAction.play();
 
+        clip = THREE.AnimationClip.findByName(this.clips, "Soldier_final.ms3d.ao|Death");
+        this.deathAction = this.mixer.clipAction(clip);
+        this.deathAction.setLoop(THREE.LoopOnce);
+        this.deathAction.clampWhenFinished = true;
+
         this.refs.model = model;
         this.refs.group = group;
         this.refs.camera = scene.camera;
@@ -152,27 +157,31 @@ export default class CharacterController extends Behaviour {
             this.movement.x += 1.0;
         }
 
-        this.rotation(this.euler.y);
+        if (this.health > 0.0) {
+            this.rotation(this.euler.y);
+        }
     }
 
     updateAnimations(dt) {
-        if (this.isMoving === true) {
-            var weight = this.walkAction.weight;
-            if (weight < 1.0) {
-                this.walkAction.setEffectiveWeight(weight + 5 * dt);
-            }
-            weight = this.idleAction.weight;
-            if (weight > 0.0) {
-                this.idleAction.setEffectiveWeight(weight - 5 * dt);
-            }
-        } else {
-            var weight = this.walkAction.weight;
-            if (weight > 0.0) {
-                this.walkAction.setEffectiveWeight(weight - 5 * dt);
-            }
-            weight = this.idleAction.weight;
-            if (weight < 1.0) {
-                this.idleAction.setEffectiveWeight(weight + 5 * dt);
+        if (this.health > 0.0) {
+            if (this.isMoving === true) {
+                var weight = this.walkAction.weight;
+                if (weight < 1.0) {
+                    this.walkAction.setEffectiveWeight(weight + 5 * dt);
+                }
+                weight = this.idleAction.weight;
+                if (weight > 0.0) {
+                    this.idleAction.setEffectiveWeight(weight - 5 * dt);
+                }
+            } else {
+                var weight = this.walkAction.weight;
+                if (weight > 0.0) {
+                    this.walkAction.setEffectiveWeight(weight - 5 * dt);
+                }
+                weight = this.idleAction.weight;
+                if (weight < 1.0) {
+                    this.idleAction.setEffectiveWeight(weight + 5 * dt);
+                }
             }
         }
     }
