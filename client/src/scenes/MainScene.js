@@ -314,8 +314,35 @@ export default class MainScene extends Scene {
         }
     }
 
-    onNetworkKillFeed(killFeed) {
-        console.log(killFeed);
+    onNetworkKillFeed(kill) {
+        var killer = "";
+        var killed = "";
+
+        for (var id in this.characters) {
+            if (!this.characters.hasOwnProperty(id)) {
+                continue;
+            }
+
+            var character = this.characters[id];
+            if (id == kill.by) {
+                killer = character.nickname;
+            }
+            if (id == kill.killed) {
+                killed = character.nickname;
+            }
+        }
+
+        if (killer == "" || killed == "") {
+            return;
+        }
+
+        this.killFeed.showKill({
+            "nickname": killer,
+            "color": "blue",
+        }, {
+            "nickname": killed,
+            "color": "red",
+        });
     }
 
     setupUi() {
