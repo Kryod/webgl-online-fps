@@ -4,6 +4,7 @@ import NetworkManager from "../NetworkManager.js";
 
 // Behaviours
 import KillFeed from "../behaviours/KillFeed.js";
+import Scoreboard from "../behaviours/Scoreboard.js";
 import Projectile from "../behaviours/Projectile.js";
 import LevelLoader from "../behaviours/LevelLoader.js";
 import CharacterController from "../behaviours/CharacterController.js";
@@ -107,8 +108,6 @@ export default class MainScene extends Scene {
 
         this.characters = {};
         this.projectiles = {};
-        this.characterController = new CharacterController(this, id, this.nickname);
-        this.characters[id] = this.characterController;
 
         NetworkManager.on("state", this.onNetworkState.bind(this));
     }
@@ -122,10 +121,17 @@ export default class MainScene extends Scene {
             var player = state.players[id];
             if (!this.characters.hasOwnProperty(id)) {
                 // A new player joined, add their character to the scene
-                this.characters[id] = new CharacterController(this, id, player.nickname, false);
+                var teams = ["blue", "red"];
+                var team = teams[player.team];
+                if (id != NetworkManager.id()) {
+                    this.characters[id] = new CharacterController(this, id, player.nickname, team, false);
+                } else {
+                    this.characterController = new CharacterController(this, id, this.nickname, team);
+                    this.characters[id] = this.characterController;
+                }
             }
 
-            if (!this.characters[id].localPlayer) {
+            if (!this.characters[id].isLocalPlayer) {
                 this.characters[id].rotation(player.rot);
             }
             this.characters[id].isMoving = player.moving;
@@ -179,5 +185,6 @@ export default class MainScene extends Scene {
 
     setupUi() {
         this.killFeed = new KillFeed(this);
+        this.scoreboard = new Scoreboard(this);
     }
 }

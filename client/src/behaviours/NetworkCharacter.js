@@ -9,6 +9,7 @@ export default class NetworkCharacter extends Behaviour {
         this.playerId = id;
         this.refs.characterController = characterController;
         this.refs.camera = camera;
+        this.refs.$deathScreen = $("#death-screen");
     }
 
     start() {
@@ -20,6 +21,9 @@ export default class NetworkCharacter extends Behaviour {
         this.lerpProgress = 0.0;
 
         NetworkManager.on("state", this.onNetworkState.bind(this));
+        NetworkManager.on("kill", this.onKill.bind(this));
+        NetworkManager.on("respawn", this.onRespawn.bind(this));
+        NetworkManager.on("health", this.onHealth.bind(this));
     }
 
     update(dt) {
@@ -27,7 +31,9 @@ export default class NetworkCharacter extends Behaviour {
             var mov = this.refs.characterController.movement;
             var rot = this.refs.characterController.euler.y;
 
-            if (mov != undefined && rot != undefined && (!this.lastMovement.equals(mov) || this.lastRotation != rot)) {
+            var alive = this.refs.characterController.health > 0.0;
+
+            if (alive && mov != undefined && rot != undefined && (!this.lastMovement.equals(mov) || this.lastRotation != rot)) {
                 NetworkManager.send("input", {
                     "mov": mov.toArray(),
                     "rot": rot,
@@ -36,7 +42,7 @@ export default class NetworkCharacter extends Behaviour {
                 this.lastRotation = rot;
             }
 
-            if (InputManager.getButtonDown(InputManager.MOUSE_LEFT_BUTTON)) {
+            if (alive && InputManager.getButtonDown(InputManager.MOUSE_LEFT_BUTTON)) {
                 var forwardVector = new THREE.Vector3();
                 this.refs.camera.getWorldDirection(forwardVector);
                 forwardVector = forwardVector.multiplyScalar(5);
@@ -66,5 +72,47 @@ export default class NetworkCharacter extends Behaviour {
         var pos = state.players[this.playerId].pos;
         this.nextTarget = new THREE.Vector3(pos[0], pos[1], pos[2]);
         this.lerpProgress = 0.0;
+    }
+
+    onKill(kill) {
+        if (kill.killed != this.playerId) {
+            return;
+        }
+
+        this.refs.characterController.walkAction.stop();
+        this.refs.characterController.idleAction.stop();
+        this.refs.characterController.deathAction.setEffectiveWeight(1.0);
+        this.refs.characterController.deathAction.play();
+
+        if (this.refs.characterController.isLocalPlayer) {
+            this.refs.$deathScreen.fadeIn("fast");
+        }
+    }
+
+    onRespawn(data) {
+        if (this.playerId != data.player) {
+            return;
+        }
+
+        if (this.refs.characterController.isLocalPlayer) {
+            this.refs.$deathScreen.find(".respawn-timer").text(data.time);
+        }
+
+        if (data.time <= 0) {
+            if (this.refs.characterController.isLocalPlayer) {
+                this.refs.$deathScreen.fadeOut("fast");
+            }
+            this.refs.characterController.deathAction.stop();
+            this.refs.characterController.walkAction.setEffectiveWeight(0.0);
+            this.refs.characterController.walkAction.play();
+            this.refs.characterController.idleAction.setEffectiveWeight(1.0);
+            this.refs.characterController.idleAction.play();
+        }
+    }
+
+    onHealth(data) {
+        if (this.playerId == data.player) {
+            this.refs.characterController.health = data.value;
+        }
     }
 }

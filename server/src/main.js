@@ -24,7 +24,7 @@ const io = require("socket.io")(server);
 const projectile = {
     id: 0,
     pos: 0,
-    forwardVector: new maths.Vector3(0),
+    forwardVector: new maths.Vector3(0, 0, 0),
     timer: 0,
     from: 0,
     body: undefined,
@@ -37,26 +37,56 @@ var state = {
     "bodies": {},
     "projectiles": {}
 };
-
+var scores = {
+    "teams": [
+        {
+            "score": 0,
+            "players": [],
+        },
+        {
+            "score": 0,
+            "players": [],
+        },
+    ],
+};
 var level = levelGenerator.generate();
 
 io.on("connection", client => {
     client.data = {
         "nickname": client.handshake.query.nickname || "",
-        "body": createPlayerBody(),
+        "body": createPlayerBody(client),
+        "health": 100,
     };
     state.players[client.id] = client;
+    var playerScore = {
+        "id": client.id,
+        "kills": 0,
+        "deaths": 0,
+    };
+    if (scores.teams[0].players.length < scores.teams[1].players.length) {
+        scores.teams[0].players.push(playerScore);
+        client.data.team = 0;
+    } else {
+        scores.teams[1].players.push(playerScore);
+        client.data.team = 1;
+    }
 
     client.on("input", data => {
-        var mov = new maths.Vector3(data.mov);
-        mov.normalize();
-        client.data.movement = mov;
+        if (client.data.health > 0.0) {
+            var mov = new maths.Vector3(data.mov);
+            mov.normalize();
+            client.data.movement = mov;
 
-        client.data.rotation = data.rot;
+            client.data.rotation = data.rot;
+        }
     });
 
-    var pos = client.data.body.position;
     client.on("fire", data => {
+        if (client.data.health <= 0.0) {
+            return;
+        }
+
+        var pos = client.data.body.position;
         var newProjectile = Object.create(projectile);
         newProjectile.pos = new maths.Vector3(pos.x, pos.y - 0.05, pos.z);
         newProjectile.forwardVector = new maths.Vector3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z);
@@ -64,16 +94,13 @@ io.on("connection", client => {
         newProjectile.id = idProjectile;
         var body = new cannon.Body({
             "mass": 0.1,
-            "position": new cannon.Vec3(newProjectile.pos.x, newProjectile.pos.y, newProjectile.pos.z),
+            "position": new cannon.Vec3(newProjectile.pos.x, newProjectile.pos.y - 0.05, newProjectile.pos.z),
             "shape": new cannon.Sphere(0.25),
-            "velocity": new cannon.Vec3(data.forwardVector.x, data.forwardVector.z, data.forwardVector.y),
+            "velocity": new cannon.Vec3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z).scale(10),
         });
         world.add(body);
         body.collisionResponse = 0;
-        body.addEventListener("collide", function(e) {
-            console.log("colision");
-        })
-
+        newProjectile.body = body;
         state.projectiles[idProjectile] = newProjectile;
 
         idProjectile++;
@@ -83,13 +110,21 @@ io.on("connection", client => {
         client.emit("level", level);
     });
 
+    client.on("request-scores", () => sendScores());
+
     client.on("disconnect", () => {
-        world.remove(client.data.body);
+        bodiesToRemove.push(client.data.body);
         delete state.players[client.id];
+
+        for (var team of scores.teams) {
+            team.players = team.players.filter(player => player.id != client.id);
+        }
+        sendScores();
     });
 });
 
 var world;
+var bodiesToRemove = [];
 function setupPhysics() {
     world = new cannon.World();
     world.gravity.set(0, -9.81, 0);
@@ -140,19 +175,72 @@ function createBoxes() {
     }
 }
 
-function createPlayerBody(pos) {
+function createPlayerBody(client) {
     function rand(min, max) {
         return Math.random() * (max - min) + min;
     };
 
+    var spawnAreaSize = 40;
     var body = new cannon.Body({
         "mass": 60,
         "linearDamping": 0.95,
         "fixedRotation": true,
-        "position": new cannon.Vec3(rand(-20, 20), 5, rand(-20, 20)),
+        "position": new cannon.Vec3(rand(-spawnAreaSize / 2, spawnAreaSize / 2), 5, rand(-spawnAreaSize / 2, spawnAreaSize / 2)),
         "shape": new cannon.Box(new cannon.Vec3(0.5, 1.8, 0.5)),
     });
     world.add(body);
+
+    body.addEventListener("collide", function(e) {
+        var projectileBodyId = e.body.id;
+
+        for (var key in state.projectiles) {
+            var projectil = state.projectiles[key];
+            if (projectil.body.id == projectileBodyId) {
+                console.log("trueProjectileId: "+ projectil.id);
+                if (projectil.from == client.id) {
+                    console.log("collision with shooter");
+                } else if (client.data.health > 0) {
+                    client.data.health -= 20;
+                    io.emit("health", {
+                        "player": client.id,
+                        "value": client.data.health,
+                    });
+
+                    console.log("current player health:" + client.data.health);
+                    console.log("player id" + client.id);
+                    if (client.data.health <= 0) {
+                        var killFeed = {
+                            "killed": client.id,
+                            "by": projectil.from,
+                        };
+                        var killerTeam = scores.teams[state.players[projectil.from].data.team];
+                        var killedTeam = scores.teams[client.data.team];
+                        killerTeam.score += 10;
+                        for (var teamPlayer of killerTeam.players) {
+                            if (teamPlayer.id == projectil.from) {
+                                teamPlayer.kills++;
+                            }
+                        }
+                        for (var teamPlayer of killedTeam.players) {
+                            if (teamPlayer.id == client.id) {
+                                teamPlayer.deaths++;
+                            }
+                        }
+
+                        bodiesToRemove.push(body);
+                        client.data.movement = null;
+
+                        io.emit("kill", killFeed);
+                        sendScores();
+                        console.log("Player "+ client.id+" was killed by " + projectil.from);
+
+                        respawnTick(client, 10);
+                    }
+                    console.log("hitting a player or some other thing");
+                }
+            }
+        }
+    });
     return body;
 }
 
@@ -165,6 +253,10 @@ function mainLoop() {
     var dt = (now - lastUpdate) / 1000.0;
     lastUpdate = now;
 
+    for (var body of bodiesToRemove) {
+        world.remove(body);
+    }
+    bodiesToRemove = [];
     world.step(dt);
 
     for (var key in state.players) {
@@ -179,7 +271,7 @@ function mainLoop() {
             mov.scale(3.0);
             mov.scale(dt);
 
-            mov = new maths.Vector3([mov.x, mov.z, 0]);
+            mov = new maths.Vector3(mov.x, mov.z, 0);
             mov.rotateZ({
                 "radians": -player.data.rotation,
             });
@@ -192,20 +284,39 @@ function mainLoop() {
         if (!state.projectiles.hasOwnProperty(key)) {
             continue;
         }
+        var proj = state.projectiles[key];
 
-        state.projectiles[key].timer += dt;
-        if (state.projectiles[key].timer >= 6.0) {
+        proj.timer += dt;
+        if (proj.timer >= 6.0) {
             delete state.projectiles[key];
+            bodiesToRemove.push(proj.body);
             continue;
         }
-
-        var proj = state.projectiles[key];
-        var fwdV = proj.forwardVector;
-        var movement = fwdV.clone().scale(dt);
-        proj.pos.add(movement);
+        proj.pos = proj.body.position;
     }
 
     io.emit("state",  stripState());
+}
+
+function respawnTick(client, time) {
+    io.emit("respawn", {
+        "player": client.id,
+        "time": time,
+    });
+    if (time > 0) {
+        setTimeout(function() {
+            respawnTick(client, time - 1);
+        }, 1000);
+    } else {
+        client.data.health = 100;
+        client.data.body.position.x = 0;
+        client.data.body.position.z = 0;
+        world.add(client.data.body);
+        io.emit("health", {
+            "player": client.id,
+            "value": client.data.health,
+        });
+    }
 }
 
 function stripState() {
@@ -220,13 +331,14 @@ function stripState() {
         }
 
         var playerData = state.players[key].data;
-        var movement = playerData.movement || new maths.Vector3();
+        var movement = playerData.movement || new maths.Vector3(0, 0, 0);
         var pos = playerData.body.position;
         stripped.players[key] = {
             "pos": [ pos.x, pos.y - 1.8, pos.z ],
             "rot": playerData.rotation,
             "moving": movement.x != 0 || movement.z != 0,
             "nickname": playerData.nickname,
+            "team": playerData.team,
         };
     }
 
@@ -247,6 +359,10 @@ function stripState() {
     }
 
     return stripped;
+}
+
+function sendScores() {
+    io.emit("scores", scores);
 }
 
 (function start() {

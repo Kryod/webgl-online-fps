@@ -10,6 +10,10 @@ var onPointerUnlockedCallbacks = [];
 
 $(document).on("keydown", function(e) {
     keysDown[e.key] = true;
+
+    if (pointerLocked && e.key == "Tab") {
+        return false;
+    }
 });
 
 $(document).on("keyup", function(e) {

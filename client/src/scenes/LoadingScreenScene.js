@@ -38,14 +38,16 @@ export default class LoadingScreenScene extends Scene {
             SceneManager.load(StartMenuScene);
         };
 
-        LoaderManager.queueTexture("./assets/models/soldier/soldier_NM.jpg");
+        LoaderManager.queueTexture("./assets/models/soldier/soldier_normal.jpg");
         LoaderManager.queueTexture("./assets/models/soldier/soldier_rough.jpg");
         LoaderManager.queueTexture("./assets/models/soldier/soldier_metalness.jpg");
-        LoaderManager.queueFbx("./assets/models/soldier/soldier_ani.fbx");
+        LoaderManager.queueFbx("./assets/models/soldier/red/soldier_red.fbx");
+        LoaderManager.queueFbx("./assets/models/soldier/blue/soldier_blue.fbx");
         LoaderManager.queueFile("./assets/shaders/sky/fragment.glsl");
         LoaderManager.queueFile("./assets/shaders/sky/vertex.glsl");
         LoaderManager.queueFont("./assets/fonts/lato.json");
-        LoaderManager.queueGltf("./assets/models/rifle/rifle.gltf");
+        LoaderManager.queueGltf("./assets/models/rifle/rifle_red.gltf");
+        LoaderManager.queueGltf("./assets/models/rifle/rifle_blue.gltf");
         LoaderManager.queueTexture("./assets/models/box/box_albedotransparency.png");
         LoaderManager.queueTexture("./assets/models/box/box_ao.png");
         LoaderManager.queueTexture("./assets/models/box/box_metallicsmoothness.png");
