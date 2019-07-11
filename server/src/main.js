@@ -37,6 +37,19 @@ var state = {
     "projectiles": {}
 };
 
+var scores = {
+    "teams": [
+        {
+            "score": 0,
+            "players": [],
+        },
+        {
+            "score": 0,
+            "players": [],
+        },
+    ],
+};
+
 io.on("connection", client => {
     client.data = {
         "nickname": client.handshake.query.nickname || "",
@@ -44,6 +57,18 @@ io.on("connection", client => {
         "lp": 100,
     };
     state.players[client.id] = client;
+    var playerScore = {
+        "id": client.id,
+        "kills": 0,
+        "deaths": 0,
+    };
+    if (scores.teams[0].players.length < scores.teams[1].players.length) {
+        scores.teams[0].players.push(playerScore);
+        client.data.team = 0;
+    } else {
+        scores.teams[1].players.push(playerScore);
+        client.data.team = 1;
+    }
 
     client.on("input", data => {
         var mov = new maths.Vector3(data.mov);
@@ -74,9 +99,16 @@ io.on("connection", client => {
         idProjectile++;
     });
 
+    client.on("request-scores", () => sendScores());
+
     client.on("disconnect", () => {
         world.remove(client.data.body);
         delete state.players[client.id];
+
+        for (var team of scores.teams) {
+            team.players = team.players.filter(player => player.id != client.id);
+        }
+        sendScores();
     });
 });
 
@@ -139,30 +171,43 @@ function createPlayerBody(pos, clientId) {
 
         for (var key in state.projectiles) {
             var projectil = state.projectiles[key];
-            if (projectil.body.id == projectileBodyId){
+            if (projectil.body.id == projectileBodyId) {
                 console.log("trueProjectileId: "+ projectil.id);
                 if (projectil.from == clientId) {
                     console.log("collision with shooter");
-                }else {
+                } else if (state.players[clientId].data.lp > 0) {
                     state.players[clientId].data.lp -= 20;
 
                     console.log("current player lp:" + state.players[clientId].data.lp);
                     console.log("player id" + state.players[clientId].id);
-                    if (state.players[clientId].data.lp <= 0){
-                        var killFeed = { 
+                    if (state.players[clientId].data.lp <= 0) {
+                        var killFeed = {
                             "killed": clientId,
                             "by": projectil.from,
                         };
+                        var killerTeam = scores.teams[state.players[projectil.from].data.team];
+                        var killedTeam = scores.teams[state.players[clientId].data.team];
+                        killerTeam.score += 10;
+                        for (var teamPlayer of killerTeam.players) {
+                            if (teamPlayer.id == projectil.from) {
+                                teamPlayer.kills++;
+                            }
+                        }
+                        for (var teamPlayer of killedTeam.players) {
+                            if (teamPlayer.id == clientId) {
+                                teamPlayer.deaths++;
+                            }
+                        }
 
                         io.emit("killFeed", killFeed);
+                        sendScores();
                         console.log("Player "+ clientId+" was killed by " + projectil.from);
                     }
                     console.log("hitting a player or some other thing");
                 }
             }
         }
-        
-    })
+    });
     return body;
 }
 
@@ -266,6 +311,10 @@ function stripState() {
     }
 
     return stripped;
+}
+
+function sendScores() {
+    io.emit("scores", scores);
 }
 
 (function start() {

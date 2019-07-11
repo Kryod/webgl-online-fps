@@ -4,6 +4,7 @@ import NetworkManager from "../NetworkManager.js";
 
 // Behaviours
 import KillFeed from "../behaviours/KillFeed.js";
+import Scoreboard from "../behaviours/Scoreboard.js";
 import Projectile from "../behaviours/Projectile.js";
 import CharacterController from "../behaviours/CharacterController.js";
 
@@ -251,7 +252,6 @@ export default class MainScene extends Scene {
         this.characters[id] = this.characterController;
 
         NetworkManager.on("state", this.onNetworkState.bind(this));
-        NetworkManager.on("killFeed", this.onNetworkKillFeed.bind(this));
     }
 
     onNetworkState(state) {
@@ -266,7 +266,7 @@ export default class MainScene extends Scene {
                 this.characters[id] = new CharacterController(this, id, player.nickname, false, player.lp);
             }
 
-            if (!this.characters[id].localPlayer) {
+            if (!this.characters[id].isLocalPlayer) {
                 this.characters[id].rotation(player.rot);
             }
             this.characters[id].isMoving = player.moving;
@@ -314,38 +314,8 @@ export default class MainScene extends Scene {
         }
     }
 
-    onNetworkKillFeed(kill) {
-        var killer = "";
-        var killed = "";
-
-        for (var id in this.characters) {
-            if (!this.characters.hasOwnProperty(id)) {
-                continue;
-            }
-
-            var character = this.characters[id];
-            if (id == kill.by) {
-                killer = character.nickname;
-            }
-            if (id == kill.killed) {
-                killed = character.nickname;
-            }
-        }
-
-        if (killer == "" || killed == "") {
-            return;
-        }
-
-        this.killFeed.showKill({
-            "nickname": killer,
-            "color": "blue",
-        }, {
-            "nickname": killed,
-            "color": "red",
-        });
-    }
-
     setupUi() {
         this.killFeed = new KillFeed(this);
+        this.scoreboard = new Scoreboard(this);
     }
 }
