@@ -127,6 +127,9 @@ export default class CharacterController extends Behaviour {
             var targetPos = this.position();
             targetPos.y = 2.5;
             otherCharacter.refs.nicknameTextMesh.lookAt(targetPos);
+
+            var d = otherCharacter.refs.group.position.distanceTo(this.refs.group.position);
+            otherCharacter.refs.nicknameTextMesh.visible = d < 7;
         }
 
         if (!InputManager.isPointerLocked()) {
