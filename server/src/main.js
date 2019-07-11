@@ -3,6 +3,7 @@ const config = require("../config");
 const maths = require("math.gl");
 const cannon = require("cannon");
 const util = require("util");
+const levelGenerator = require("./levelgenerator");
 
 var server = null;
 if (config.https === false) {
@@ -37,10 +38,12 @@ var state = {
     "projectiles": {}
 };
 
+var level = levelGenerator.generate();
+
 io.on("connection", client => {
     client.data = {
         "nickname": client.handshake.query.nickname || "",
-        "body": createPlayerBody(new maths.Vector3(0, 10, 0)),
+        "body": createPlayerBody(),
     };
     state.players[client.id] = client;
 
@@ -76,6 +79,10 @@ io.on("connection", client => {
         idProjectile++;
     });
 
+    client.on("request-level", () => {
+        client.emit("level", level);
+    });
+
     client.on("disconnect", () => {
         world.remove(client.data.body);
         delete state.players[client.id];
@@ -105,6 +112,7 @@ function setupPhysics() {
 
     createGround();
     createBall();
+    createBoxes();
 }
 
 function createGround() {
@@ -126,12 +134,22 @@ function createBall() {
     state.bodies["ball"] = body;
 }
 
+function createBoxes() {
+    for (var box of level.boxes) {
+        world.add(levelGenerator.makeBoxBody(box));
+    }
+}
+
 function createPlayerBody(pos) {
+    function rand(min, max) {
+        return Math.random() * (max - min) + min;
+    };
+
     var body = new cannon.Body({
         "mass": 60,
         "linearDamping": 0.95,
         "fixedRotation": true,
-        "position": new cannon.Vec3(pos.x, pos.y, pos.z),
+        "position": new cannon.Vec3(rand(-20, 20), 5, rand(-20, 20)),
         "shape": new cannon.Box(new cannon.Vec3(0.5, 1.8, 0.5)),
     });
     world.add(body);

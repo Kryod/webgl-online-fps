@@ -119,10 +119,6 @@ export default class CharacterController extends Behaviour {
         this.updateAnimations(dt);
         this.mixer.update(dt);
 
-        if (InputManager.getKeyUp("g")) {
-            this.scene.generateRandomLevel();
-        }
-
         if (!this.isLocalPlayer) {
             return;
         }
