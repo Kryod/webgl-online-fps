@@ -54,11 +54,6 @@ export default class NetworkCharacter extends Behaviour {
         NetworkManager.on("pong", this.onPong.bind(this));
         NetworkManager.on("shot", this.onShot.bind(this));
 
-        setInterval(function() {
-            startTime = Date.now();
-            NetworkManager.send("ping", {});
-        }, 1000);
-
         this.refs.$healthBar.show();
     }
 
@@ -104,7 +99,7 @@ export default class NetworkCharacter extends Behaviour {
 
     onPong(data) {
         if (this.refs.characterController.isLocalPlayer) {
-            console.log("latency: " + data);
+            $("#ping .value").text(data);
         }
     }
 

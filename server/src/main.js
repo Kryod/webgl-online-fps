@@ -18,7 +18,9 @@ if (config.https === false) {
         "rejectUnauthorized": false
     });
 }
-const io = require("socket.io")(server);
+const io = require("socket.io")(server, {
+    "pingInterval": 2000,
+});
 
 const ROUND_TIME = 300;
 const ROUND_MAX_SCORE = 250;

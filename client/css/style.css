@@ -360,3 +360,9 @@ body {
     background-color: rgba(11, 165, 21, 0.5);
     transition: width 0.25s ease;
 }
+
+#overlay #scoreboard #ping {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+}
