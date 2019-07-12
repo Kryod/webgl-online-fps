@@ -203,9 +203,16 @@ export default class MainScene extends Scene {
         this.scoreboard.show();
         this.scoreboard.enabled = false;
 
-        var teams = ["blue", "red"];
-        var team = teams[data.team];
-        $("#game-end").find(".team").text(team.toUpperCase()).addClass(team);
+        if (data.team != -1) {
+            var teams = ["blue", "red"];
+            var team = teams[data.team];
+            $("#game-end .win .team").text(team.toUpperCase()).addClass(team);
+            $("#game-end .draw").hide();
+            $("#game-end .win").show();
+        } else {
+            $("#game-end .win").hide();
+            $("#game-end .draw").show();
+        }
         $("#game-end").fadeIn("fast");
     }
 }

@@ -6,11 +6,14 @@ export default class Scoreboard extends Behaviour {
     start() {
         this.refs.$board = $("#scoreboard");
         this.refs.$scores = $("#score .score");
+        this.refs.$time = $("#score .time");
+        this.time = 0;
         this.shown = false;
 
         $("#score").show();
         NetworkManager.on("scores", this.updateBoard.bind(this));
         NetworkManager.send("request-scores", {});
+        setInterval(this.updateClock.bind(this), 1000);
     }
 
     update() {
@@ -36,6 +39,8 @@ export default class Scoreboard extends Behaviour {
     updateBoard(scores) {
         var teams = ["blue", "red"];
         this.refs.$board.find("table tbody").empty();
+        this.time = Math.round(scores.time);
+        this.refs.$time.text(this.time);
 
         for (var teamIdx in scores.teams) {
             var team = scores.teams[teamIdx];
@@ -58,6 +63,13 @@ export default class Scoreboard extends Behaviour {
                 }
                 this.refs.$board.find("table." + teams[teamIdx] + " tbody").append($row);
             }
+        }
+    }
+
+    updateClock() {
+        this.time--;
+        if (this.time >= 0) {
+            this.refs.$time.text(this.time);
         }
     }
 }

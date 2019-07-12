@@ -376,6 +376,15 @@ function mainLoop() {
                 maxTeam = idx;
             }
         }
+        var draw = true;
+        for (var t of scores.teams) {
+            if (t.score != maxScore) {
+                draw = false;
+            }
+        }
+        if (draw) {
+            maxTeam = -1;
+        }
         if (scores.time <= 0.0 || maxScore >= ROUND_MAX_SCORE) {
             state.gameOver = true;
             sendScores();
