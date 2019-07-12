@@ -108,6 +108,7 @@ io.on("connection", client => {
             "shape": new cannon.Sphere(0.1),
             "position": new cannon.Vec3(newProjectile.pos.x, newProjectile.pos.y, newProjectile.pos.z),
             "velocity": new cannon.Vec3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z).scale(10),
+            "linearDamping": 0.3,
         });
         world.add(body);
         body.collisionResponse = 0;
@@ -155,10 +156,10 @@ function setupPhysics() {
 
     var solver = new cannon.GSSolver();
 
-    world.defaultContactMaterial.contactEquationStiffness = 1e9;
-    world.defaultContactMaterial.contactEquationRelaxation = 4;
+    world.defaultContactMaterial.contactEquationStiffness = 1e8;
+    world.defaultContactMaterial.contactEquationRelaxation = 3;
 
-    solver.iterations = 7;
+    solver.iterations = 10;
     solver.tolerance = 0.1;
     world.solver = new cannon.SplitSolver(solver);
 
@@ -171,7 +172,7 @@ function setupPhysics() {
         physicsMaterial,
         physicsMaterial,
         0.0, // friction coefficient
-        0.8  // restitution
+        0.8, // restitution
     );
     // We must add the contact materials to the world
     world.addContactMaterial(physicsContactMaterial);
@@ -191,7 +192,7 @@ function createGround() {
     world.add(body);
 }
 
-function deleteProjectile(e){
+function deleteProjectile(e) {
     for (var key in state.projectiles) {
         var projectile = state.projectiles[key];
         if (projectile.body.id == e.body.id) {
@@ -206,6 +207,7 @@ function createBall() {
         "mass": 1,
         "position": new cannon.Vec3(0, 300, 0),
         "shape": new cannon.Sphere(0.5),
+        "linearDamping": 0.3,
     });
     world.add(body);
     body.addEventListener("collide", deleteProjectile);
@@ -252,71 +254,11 @@ function createPlayerBody(client) {
         "linearDamping": 0.95,
         "fixedRotation": true,
         "position": null,
-        "shape": new cannon.Box(new cannon.Vec3(0.65 / 2, 1.9 / 2, 0.4 / 2)),
+        "shape": new cannon.Box(new cannon.Vec3(0.6 / 2, 1.9 / 2, 0.4 / 2)),
     });
     spawnPlayer(body);
     world.add(body);
 
-    body.addEventListener("collide", function(e) {
-        if (!state.gameOver) {
-            // Check for collisions with projectiles
-            for (var key in state.projectiles) {
-                var projectile = state.projectiles[key];
-                if (projectile.body.id == e.body.id) {
-                    if (projectile.from != client.id && client.data.health > 0) {
-                        client.data.health -= 20;
-                        state.players[projectile.from].emit("hit", {
-                            "from": projectile.from,
-                            "hit": client.id,
-                        });
-                        io.emit("health", {
-                            "player": client.id,
-                            "value": client.data.health,
-                        });
-
-                        if (client.data.health <= 0) {
-                            var killFeed = {
-                                "killed": client.id,
-                                "by": projectile.from,
-                            };
-                            var killerTeamId = state.players[projectile.from].data.team;
-                            var killedTeamId = client.data.team;
-                            var killerTeam = scores.teams[killerTeamId];
-                            var killedTeam = scores.teams[killedTeamId];
-                            var tk = killerTeamId == killedTeamId;
-                            if (tk) {
-                                killerTeam.score -= 10;
-                            } else {
-                                killerTeam.score += 10;
-                            }
-                            for (var teamPlayer of killerTeam.players) {
-                                if (teamPlayer.id == projectile.from) {
-                                    teamPlayer.kills += tk ? -1 : +1;
-                                }
-                            }
-                            for (var teamPlayer of killedTeam.players) {
-                                if (teamPlayer.id == client.id) {
-                                    teamPlayer.deaths++;
-                                }
-                            }
-
-                            bodiesToRemove.push(body);
-                            client.data.body.position.y = 1;
-                            client.data.movement = null;
-
-                            io.emit("kill", killFeed);
-                            sendScores();
-
-                            respawnTick(client, 5);
-                        }
-
-                        delete state.projectiles[key];
-                        bodiesToRemove.push(projectile.body);
-                    }
-                }
-            }
-        }
-    });
     return body;
 }
 
@@ -354,6 +296,35 @@ function mainLoop() {
     bodiesToRemove = [];
     world.step(dt);
 
+    // Check players-projectiles collisions
+    var playerBodies = Object.entries(state.players).map(entry => entry[1].data.body);
+    if (playerBodies.length > 0) {
+        for (var projId in state.projectiles) {
+            if (!state.projectiles.hasOwnProperty(projId)) {
+                continue;
+            }
+            var proj = state.projectiles[projId];
+            var from = proj.body.position.clone();
+            var to = from.clone().vadd(proj.body.velocity.clone());
+            var ray = new cannon.Ray(from, to);
+            var result = new cannon.RaycastResult();
+            ray.intersectBodies(playerBodies, result);
+            if (result.hasHit && result.distance < proj.body.velocity.length() / ticks) {
+                var playerHit = null;
+                Object.entries(state.players).forEach(function(d) {
+                    var player = d[1];
+                    if (player.data.body.id == result.body.id) {
+                        playerHit = player;
+                    }
+                });
+                if (playerHit != null && result.body != state.players[proj.from].data.body) {
+                    onPlayerHit(proj, playerHit);
+                }
+            }
+        }
+    }
+
+    // Handle player movement and jumps
     for (var key in state.players) {
         if (!state.players.hasOwnProperty(key)) {
             continue;
@@ -377,6 +348,7 @@ function mainLoop() {
         }
     }
 
+    // Remove old projectiles
     for (var key in state.projectiles) {
         if (!state.projectiles.hasOwnProperty(key)) {
             continue;
@@ -430,6 +402,61 @@ function mainLoop() {
             setTimeout(resetGame, 10000);
         }
     }
+}
+
+function onPlayerHit(projectile, client) {
+    if (client.data.health <= 0) {
+        return;
+    }
+
+    client.data.health -= 10;
+    state.players[projectile.from].emit("hit", {
+        "from": projectile.from,
+        "hit": client.id,
+    });
+    io.emit("health", {
+        "player": client.id,
+        "value": client.data.health,
+    });
+
+    if (client.data.health <= 0) {
+        var killFeed = {
+            "killed": client.id,
+            "by": projectile.from,
+        };
+        var killerTeamId = state.players[projectile.from].data.team;
+        var killedTeamId = client.data.team;
+        var killerTeam = scores.teams[killerTeamId];
+        var killedTeam = scores.teams[killedTeamId];
+        var tk = killerTeamId == killedTeamId;
+        if (tk) {
+            killerTeam.score -= 10;
+        } else {
+            killerTeam.score += 10;
+        }
+        for (var teamPlayer of killerTeam.players) {
+            if (teamPlayer.id == projectile.from) {
+                teamPlayer.kills += tk ? -1 : +1;
+            }
+        }
+        for (var teamPlayer of killedTeam.players) {
+            if (teamPlayer.id == client.id) {
+                teamPlayer.deaths++;
+            }
+        }
+
+        bodiesToRemove.push(client.data.body);
+        client.data.body.position.y = 1;
+        client.data.movement = null;
+
+        io.emit("kill", killFeed);
+        sendScores();
+
+        respawnTick(client, 5);
+    }
+
+    delete state.projectiles[projectile.id];
+    bodiesToRemove.push(projectile.body);
 }
 
 function respawnTick(client, time) {
