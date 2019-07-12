@@ -10,6 +10,7 @@ export default class NetworkCharacter extends Behaviour {
         this.refs.characterController = characterController;
         this.refs.camera = camera;
         this.refs.$deathScreen = $("#death-screen");
+        this.refs.$healthBar = $("#health");
     }
 
     start() {
@@ -24,6 +25,8 @@ export default class NetworkCharacter extends Behaviour {
         NetworkManager.on("kill", this.onKill.bind(this));
         NetworkManager.on("respawn", this.onRespawn.bind(this));
         NetworkManager.on("health", this.onHealth.bind(this));
+
+        this.refs.$healthBar.show();
     }
 
     update(dt) {
@@ -119,6 +122,7 @@ export default class NetworkCharacter extends Behaviour {
     onHealth(data) {
         if (this.playerId == data.player) {
             this.refs.characterController.health = data.value;
+            this.refs.$healthBar.find(".health-bar").css("width", data.value + "%");
         }
     }
 }
