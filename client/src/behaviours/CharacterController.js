@@ -41,12 +41,18 @@ export default class CharacterController extends Behaviour {
                 "height": 1,
             });
             textGeometry.center();
-            var textMesh = new THREE.Mesh(textGeometry, new THREE.MeshBasicMaterial({ color: 0xffffff }));
+            var color = 0xffffff;
+            if (skin == "red") {
+                color = "rgb(255, 15, 15)";
+            } else if (skin == "blue") {
+                color = "rgb(2, 136, 209)";
+            }
+            var textMesh = new THREE.Mesh(textGeometry, new THREE.MeshBasicMaterial({ "color": color }));
             textMesh.position.set(0, 2.5, 0);
             textMesh.scale.set(0.005, 0.005, 0.005);
             for (var x = -2; x <= 2; x += 4) {
                 for (var y = -2; y <= 2; y += 4) {
-                    var outline = new THREE.Mesh(textGeometry, new THREE.MeshBasicMaterial({ color: 0x000000 }));
+                    var outline = new THREE.Mesh(textGeometry, new THREE.MeshBasicMaterial({ "color": 0x000000 }));
                     textMesh.add(outline);
                     outline.position.set(x, y, 0);
                     outline.scale.z = 0.5;
@@ -134,8 +140,25 @@ export default class CharacterController extends Behaviour {
             targetPos.y = 2.5;
             otherCharacter.refs.nicknameTextMesh.lookAt(targetPos);
 
-            var d = otherCharacter.refs.group.position.distanceTo(this.refs.group.position);
-            otherCharacter.refs.nicknameTextMesh.visible = d < 7;
+            var myTeam = -1;
+            var otherTeam = -1;
+            if (this.scene.scoreboard.scores != undefined) {
+                for (var teamIdx in this.scene.scoreboard.scores.teams) {
+                    var team = this.scene.scoreboard.scores.teams[teamIdx];
+                    for (var p of team.players) {
+                        if (p.id == this.refs.networkCharacter.playerId) {
+                            myTeam = teamIdx;
+                        }
+                        if (p.id == otherCharacter.refs.networkCharacter.playerId) {
+                            otherTeam = teamIdx;
+                        }
+                    }
+                }
+            }
+            if (myTeam != otherTeam || myTeam == -1) {
+                var d = otherCharacter.refs.group.position.distanceTo(this.refs.group.position);
+                otherCharacter.refs.nicknameTextMesh.visible = d < 7;
+            }
         }
 
         if (!InputManager.isPointerLocked()) {
