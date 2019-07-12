@@ -66,6 +66,7 @@ io.on("connection", client => {
         "body": createPlayerBody(client),
         "health": 100,
         "canJump": true,
+        "lastShot": null,
     };
     state.players[client.id] = client;
     var playerScore = {
@@ -73,7 +74,7 @@ io.on("connection", client => {
         "kills": 0,
         "deaths": 0,
     };
-    if (scores.teams[0].players.length < scores.teams[1].players.length) {
+    if (scores.teams[0].players.length <= scores.teams[1].players.length) {
         scores.teams[0].players.push(playerScore);
         client.data.team = 0;
     } else {
@@ -95,6 +96,12 @@ io.on("connection", client => {
         if (client.data.health <= 0.0) {
             return;
         }
+        if (client.data.lastShot != null) {
+            var dt = Date.now() - client.data.lastShot;
+            if (dt < 200) {
+                return;
+            }
+        }
 
         var pos = client.data.body.position;
         var newProjectile = Object.create(projectile);
@@ -107,7 +114,7 @@ io.on("connection", client => {
             "mass": 0.1,
             "shape": new cannon.Sphere(0.1),
             "position": new cannon.Vec3(newProjectile.pos.x, newProjectile.pos.y, newProjectile.pos.z),
-            "velocity": new cannon.Vec3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z).scale(10),
+            "velocity": new cannon.Vec3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z).scale(15),
             "linearDamping": 0.3,
         });
         world.add(body);
@@ -118,6 +125,7 @@ io.on("connection", client => {
         io.emit("shot", {
             "player": client.id,
         });
+        client.data.lastShot = Date.now();
 
         idProjectile++;
     });
@@ -547,7 +555,12 @@ function resetGame() {
 
         var player = state.players[id];
         player.data.health = 100;
+        io.emit("health", {
+            "player": id,
+            "value": player.data.health,
+        });
         player.data.canJump = true;
+        player.data.lastShot = null;
         player.data.body = createPlayerBody(player);
     }
 
