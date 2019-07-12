@@ -3,6 +3,8 @@ import InputManager from "../InputManager.js";
 import NetworkManager from "../NetworkManager.js";
 import LoaderManager from "../LoaderManager.js";
 
+var startTime;
+
 export default class NetworkCharacter extends Behaviour {
     constructor(scene, id, characterController, camera) {
         super(scene);
@@ -34,6 +36,13 @@ export default class NetworkCharacter extends Behaviour {
         NetworkManager.on("kill", this.onKill.bind(this));
         NetworkManager.on("respawn", this.onRespawn.bind(this));
         NetworkManager.on("health", this.onHealth.bind(this));
+        NetworkManager.on("pong", this.onPong.bind(this));
+
+
+        setInterval(function() {
+            startTime = Date.now();
+            NetworkManager.send("ping", {});
+        }, 1000);
 
         this.refs.$healthBar.show();
     }
@@ -75,6 +84,12 @@ export default class NetworkCharacter extends Behaviour {
             pos.lerpVectors(this.prevTarget, this.nextTarget, this.lerpProgress / 0.025);
             this.lerpProgress += dt;
             this.refs.characterController.position(pos);
+        }
+    }
+
+    onPong(data) {
+        if (this.refs.characterController.isLocalPlayer) {
+            console.log("latency: " + data);
         }
     }
 
