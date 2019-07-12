@@ -37,6 +37,8 @@ export default class Scoreboard extends Behaviour {
     }
 
     updateBoard(scores) {
+        this.scores = scores;
+
         var teams = ["blue", "red"];
         this.refs.$board.find("table tbody").empty();
         this.time = Math.round(scores.time);

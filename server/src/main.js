@@ -100,6 +100,7 @@ io.on("connection", client => {
         newProjectile.forwardVector = new maths.Vector3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z);
         newProjectile.from = client.id;
         newProjectile.id = idProjectile;
+        newProjectile.team = client.data.team;
         var body = new cannon.Body({
             "mass": 0.1,
             "shape": new cannon.Sphere(0.1),
@@ -110,6 +111,10 @@ io.on("connection", client => {
         body.collisionResponse = 0;
         newProjectile.body = body;
         state.projectiles[idProjectile] = newProjectile;
+
+        io.emit("shot", {
+            "player": client.id,
+        });
 
         idProjectile++;
     });
@@ -268,12 +273,19 @@ function createPlayerBody(client) {
                                 "killed": client.id,
                                 "by": projectile.from,
                             };
-                            var killerTeam = scores.teams[state.players[projectile.from].data.team];
-                            var killedTeam = scores.teams[client.data.team];
-                            killerTeam.score += 10;
+                            var killerTeamId = state.players[projectile.from].data.team;
+                            var killedTeamId = client.data.team;
+                            var killerTeam = scores.teams[killerTeamId];
+                            var killedTeam = scores.teams[killedTeamId];
+                            var tk = killerTeamId == killedTeamId;
+                            if (tk) {
+                                killerTeam.score -= 10;
+                            } else {
+                                killerTeam.score += 10;
+                            }
                             for (var teamPlayer of killerTeam.players) {
                                 if (teamPlayer.id == projectile.from) {
-                                    teamPlayer.kills++;
+                                    teamPlayer.kills += tk ? -1 : +1;
                                 }
                             }
                             for (var teamPlayer of killedTeam.players) {
@@ -283,6 +295,7 @@ function createPlayerBody(client) {
                             }
 
                             bodiesToRemove.push(body);
+                            client.data.body.position.y = 1;
                             client.data.movement = null;
 
                             io.emit("kill", killFeed);
@@ -466,9 +479,11 @@ function stripState() {
             continue;
         }
 
+        var proj = state.projectiles[key];
         stripped.projectiles[key] = {
-            "id": state.projectiles[key].id,
-            "pos": state.projectiles[key].pos,
+            "id": proj.id,
+            "pos": proj.pos,
+            "team": proj.team,
         };
     }
 

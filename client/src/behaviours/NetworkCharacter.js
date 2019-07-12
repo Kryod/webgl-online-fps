@@ -25,19 +25,34 @@ export default class NetworkCharacter extends Behaviour {
         var listener = new THREE.AudioListener();
         this.refs.camera.add(listener);
 
-        this.refs.sound = new THREE.PositionalAudio(listener);
-        this.refs.sound.setVolume(this.refs.characterController.isLocalPlayer ? 0.5 : 0.3);
+        if (!this.refs.characterController.isLocalPlayer) {
+            this.refs.hitSound = new THREE.PositionalAudio(listener);
+            this.refs.hitSound.setRefDistance(3);
+            this.refs.characterController.refs.model.add(this.refs.hitSound);
+        } else {
+            this.refs.hitSound = new THREE.Audio(listener);
+        }
+        this.refs.hitSound.setBuffer(LoaderManager.get("hit.mp3"));
+        this.refs.hitSound.setVolume(0.5);
+
+        if (!this.refs.characterController.isLocalPlayer) {
+            this.refs.shotSound = new THREE.PositionalAudio(listener);
+            this.refs.shotSound.setRefDistance(3);
+            this.refs.characterController.refs.model.add(this.refs.shotSound);
+        } else {
+            this.refs.shotSound = new THREE.Audio(listener);
+        }
+        this.refs.shotSound.setBuffer(LoaderManager.get("shot.mp3"));
+        this.refs.shotSound.setVolume(0.1);
 
         this.lerpProgress = 0.0;
-
-        this.refs.characterController.refs.group.add(this.refs.sound);
 
         NetworkManager.on("state", this.onNetworkState.bind(this));
         NetworkManager.on("kill", this.onKill.bind(this));
         NetworkManager.on("respawn", this.onRespawn.bind(this));
         NetworkManager.on("health", this.onHealth.bind(this));
         NetworkManager.on("pong", this.onPong.bind(this));
-
+        NetworkManager.on("shot", this.onShot.bind(this));
 
         setInterval(function() {
             startTime = Date.now();
@@ -151,14 +166,21 @@ export default class NetworkCharacter extends Behaviour {
             }
 
             if (data.value < 100) {
-                var buffer = LoaderManager.get("hit.mp3");
-                if (this.refs.sound.isPlaying) {
-                    this.refs.sound.stop();
+                if (this.refs.hitSound.isPlaying) {
+                    this.refs.hitSound.stop();
                 }
-                this.refs.sound.setBuffer(buffer);
-                this.refs.sound.setRefDistance(20);
-                this.refs.sound.play();
+                this.refs.hitSound.play();
             }
+        }
+    }
+
+
+    onShot(data) {
+        if (this.playerId == data.player) {
+            if (this.refs.shotSound.isPlaying) {
+                this.refs.shotSound.stop();
+            }
+            this.refs.shotSound.play();
         }
     }
 }

@@ -1,12 +1,18 @@
 import Behaviour from "./Behaviour.js";
 
 export default class Projectile extends Behaviour {
-    constructor(scene, pos, forwardVector, size = 0.1, speed = 20, id) {
+    constructor(scene, id, pos, team, size = 0.1) {
         super(scene);
 
         this.geometry = new THREE.SphereGeometry(size, 32, 32);
         this.material = new THREE.MeshLambertMaterial();
-        this.material.color.setRGB(0.886, 0.07, 0.0);
+        if (team == 0) {
+            this.material.color.set("rgb(2, 136, 209)");
+        } else if (team == 1) {
+            this.material.color.set("rgb(255, 15, 15)");
+        } else {
+            this.material.color.setRGB(0.9, 0.9, 0.9);
+        }
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         if (Array.isArray(pos)) {
             this.mesh.position.set(pos[0], pos[1], pos[2]);
@@ -25,9 +31,6 @@ export default class Projectile extends Behaviour {
     destroy() {
         super.destroy();
         this.scene.remove(this.mesh);
-    }
-
-    update(dt) {
     }
 
     position(val) {
