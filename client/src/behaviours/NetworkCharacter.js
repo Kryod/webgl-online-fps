@@ -1,6 +1,7 @@
 import Behaviour from "./Behaviour.js";
 import InputManager from "../InputManager.js";
 import NetworkManager from "../NetworkManager.js";
+import LoaderManager from "../LoaderManager.js";
 
 export default class NetworkCharacter extends Behaviour {
     constructor(scene, id, characterController, camera) {
@@ -18,7 +19,14 @@ export default class NetworkCharacter extends Behaviour {
 
         this.prevTarget = new THREE.Vector3();
         this.nextTarget = new THREE.Vector3();
+        var listener = new THREE.AudioListener();
+        this.refs.camera.add( listener );
+
+        this.refs.sound = new THREE.PositionalAudio( listener );
+
         this.lerpProgress = 0.0;
+
+        this.refs.characterController.refs.group.add( this.refs.sound );
 
         NetworkManager.on("state", this.onNetworkState.bind(this));
         NetworkManager.on("kill", this.onKill.bind(this));
@@ -119,6 +127,15 @@ export default class NetworkCharacter extends Behaviour {
     onHealth(data) {
         if (this.playerId == data.player) {
             this.refs.characterController.health = data.value;
+            if (data.value < 100) {
+
+                var buffer = LoaderManager.get("hit.mp3");
+                if (this.refs.sound.isPlaying)
+                    this.refs.sound.stop();
+                this.refs.sound.setBuffer( buffer );
+                this.refs.sound.setRefDistance( 20 );
+                this.refs.sound.play();
+            }
         }
     }
 }

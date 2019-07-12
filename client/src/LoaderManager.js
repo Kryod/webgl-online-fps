@@ -6,6 +6,7 @@ const fbxLoader = new THREE.FBXLoader();
 const textureLoader = new THREE.TextureLoader();
 const fileLoader = new THREE.FileLoader();
 const fontLoader = new THREE.FontLoader();
+const audioLoader = new THREE.AudioLoader();
 
 var queue = [];
 var loaded = {};
@@ -69,6 +70,13 @@ export default {
         queue.push({
             "path": path,
             "loader": fileLoader,
+        });
+    },
+
+    queueAudio(path) {
+        queue.push({
+            "path": path,
+            "loader": audioLoader,
         });
     },
 
