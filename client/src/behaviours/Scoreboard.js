@@ -6,6 +6,8 @@ export default class Scoreboard extends Behaviour {
     start() {
         this.refs.$board = $("#scoreboard");
         this.refs.$scores = $("#score .score");
+        this.shown = false;
+
         $("#score").show();
         NetworkManager.on("scores", this.updateBoard.bind(this));
         NetworkManager.send("request-scores", {});
@@ -14,11 +16,21 @@ export default class Scoreboard extends Behaviour {
     update() {
         if (InputManager.isPointerLocked()) {
             if (InputManager.getKeyDown("Tab")) {
-                this.refs.$board.show();
+                this.show();
             } else if (InputManager.getKeyUp("Tab")) {
-                this.refs.$board.hide();
+                this.hide();
             }
         }
+    }
+
+    show() {
+        this.shown = true;
+        this.refs.$board.show();
+    }
+
+    hide() {
+        this.shown = false;
+        this.refs.$board.hide();
     }
 
     updateBoard(scores) {

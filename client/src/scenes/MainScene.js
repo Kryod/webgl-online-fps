@@ -31,6 +31,7 @@ export default class MainScene extends Scene {
         this.background = new THREE.Color().setHSL(0.6, 0.0, 1.0);
         this.fog = new THREE.Fog(this.background, 1, 150);
         this.debug = new SceneDebug(this);
+        NetworkManager.on("end", this.onGameEnd.bind(this));
         NetworkManager.on("level", this.onLevelReceived.bind(this));
         NetworkManager.send("request-level", {});
     }
@@ -183,10 +184,28 @@ export default class MainScene extends Scene {
 
     onLevelReceived(level) {
         this.levelLoader.loadFromObject(level);
+
+        if (!this.scoreboard.enabled) {
+            this.scoreboard.enabled = true;
+            if (this.scoreboard.shown) {
+                this.scoreboard.hide();
+            }
+        }
+        $("#game-end").fadeOut("fast");
     }
 
     setupUi() {
         this.killFeed = new KillFeed(this);
         this.scoreboard = new Scoreboard(this);
+    }
+
+    onGameEnd(data) {
+        this.scoreboard.show();
+        this.scoreboard.enabled = false;
+
+        var teams = ["blue", "red"];
+        var team = teams[data.team];
+        $("#game-end").find(".team").text(team.toUpperCase()).addClass(team);
+        $("#game-end").fadeIn("fast");
     }
 }

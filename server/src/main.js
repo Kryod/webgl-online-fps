@@ -20,6 +20,8 @@ if (config.https === false) {
 }
 const io = require("socket.io")(server);
 
+const ROUND_TIME = 300;
+const ROUND_MAX_SCORE = 250;
 
 const projectile = {
     id: 0,
@@ -30,12 +32,8 @@ const projectile = {
     body: undefined,
 };
 
-var idProjectile = 0;
-
 var state = {
     "players": {},
-    "bodies": {},
-    "projectiles": {}
 };
 var scores = {
     "teams": [
@@ -48,8 +46,12 @@ var scores = {
             "players": [],
         },
     ],
+    "time": ROUND_TIME,
 };
-var level = levelGenerator.generate();
+var level;
+var world;
+var idProjectile;
+resetGame();
 
 io.on("connection", client => {
     var nickname = client.handshake.query.nickname;
@@ -138,7 +140,6 @@ io.on("connection", client => {
     });
 });
 
-var world;
 var bodiesToRemove = [];
 function setupPhysics() {
     world = new cannon.World();
@@ -236,43 +237,45 @@ function createPlayerBody(client) {
     world.add(body);
 
     body.addEventListener("collide", function(e) {
-        // Check for collisions with projectiles
-        for (var key in state.projectiles) {
-            var projectile = state.projectiles[key];
-            if (projectile.body.id == e.body.id) {
-                if (projectile.from != client.id && client.data.health > 0) {
-                    client.data.health -= 20;
-                    io.emit("health", {
-                        "player": client.id,
-                        "value": client.data.health,
-                    });
+        if (!state.gameOver) {
+            // Check for collisions with projectiles
+            for (var key in state.projectiles) {
+                var projectile = state.projectiles[key];
+                if (projectile.body.id == e.body.id) {
+                    if (projectile.from != client.id && client.data.health > 0) {
+                        client.data.health -= 20;
+                        io.emit("health", {
+                            "player": client.id,
+                            "value": client.data.health,
+                        });
 
-                    if (client.data.health <= 0) {
-                        var killFeed = {
-                            "killed": client.id,
-                            "by": projectile.from,
-                        };
-                        var killerTeam = scores.teams[state.players[projectile.from].data.team];
-                        var killedTeam = scores.teams[client.data.team];
-                        killerTeam.score += 10;
-                        for (var teamPlayer of killerTeam.players) {
-                            if (teamPlayer.id == projectile.from) {
-                                teamPlayer.kills++;
+                        if (client.data.health <= 0) {
+                            var killFeed = {
+                                "killed": client.id,
+                                "by": projectile.from,
+                            };
+                            var killerTeam = scores.teams[state.players[projectile.from].data.team];
+                            var killedTeam = scores.teams[client.data.team];
+                            killerTeam.score += 10;
+                            for (var teamPlayer of killerTeam.players) {
+                                if (teamPlayer.id == projectile.from) {
+                                    teamPlayer.kills++;
+                                }
                             }
-                        }
-                        for (var teamPlayer of killedTeam.players) {
-                            if (teamPlayer.id == client.id) {
-                                teamPlayer.deaths++;
+                            for (var teamPlayer of killedTeam.players) {
+                                if (teamPlayer.id == client.id) {
+                                    teamPlayer.deaths++;
+                                }
                             }
+
+                            bodiesToRemove.push(body);
+                            client.data.movement = null;
+
+                            io.emit("kill", killFeed);
+                            sendScores();
+
+                            respawnTick(client, 5);
                         }
-
-                        bodiesToRemove.push(body);
-                        client.data.movement = null;
-
-                        io.emit("kill", killFeed);
-                        sendScores();
-
-                        respawnTick(client, 5);
                     }
                 }
             }
@@ -304,6 +307,11 @@ function mainLoop() {
     var dt = (now - lastUpdate) / 1000.0;
     lastUpdate = now;
 
+    if (scores.teams.reduce((n, t) => n + t.players.length, 0) > 0) {
+        // Pass time while at least one player is connected
+        scores.time -= dt;
+    }
+
     for (var body of bodiesToRemove) {
         world.remove(body);
     }
@@ -320,7 +328,7 @@ function mainLoop() {
 
         if (player.data.movement != null) {
             var mov = new maths.Vector3(player.data.movement);
-            mov.scale(3.0);
+            mov.scale(4.0);
             mov.scale(dt);
 
             mov = new maths.Vector3(mov.x, mov.z, 0);
@@ -356,6 +364,26 @@ function mainLoop() {
         io.emit("debug", {
             "aabb": world.bodies.map(b => b.aabb),
         });
+    }
+
+    if (!state.gameOver) {
+        var maxScore = 0;
+        var maxTeam = -1;
+        for (var idx in scores.teams) {
+            var t = scores.teams[idx];
+            if (t.score > maxScore) {
+                maxScore = t.score;
+                maxTeam = idx;
+            }
+        }
+        if (scores.time <= 0.0 || maxScore >= ROUND_MAX_SCORE) {
+            state.gameOver = true;
+            sendScores();
+            io.emit("end", {
+                "team": maxTeam,
+            });
+            setTimeout(resetGame, 10000);
+        }
     }
 }
 
@@ -425,8 +453,42 @@ function sendScores() {
     io.emit("scores", scores);
 }
 
-(function start() {
+function resetGame() {
+    state = {
+        "players": state.players,
+        "bodies": {},
+        "projectiles": {},
+        "gameOver": false,
+    };
+    idProjectile = 0;
+    bodiesToRemove = [];
+    level = levelGenerator.generate();
+    io.emit("level", level);
     setupPhysics();
+
+    for (var id in state.players) {
+        if (!state.players.hasOwnProperty(id)) {
+            continue;
+        }
+
+        var player = state.players[id];
+        player.data.health = 100;
+        player.data.canJump = true;
+        player.data.body = createPlayerBody(player);
+    }
+
+    scores.time = ROUND_TIME;
+    for (var t of scores.teams) {
+        t.score = 0;
+        for (var player of t.players) {
+            player.kills = 0;
+            player.deaths = 0;
+        }
+    }
+    sendScores();
+}
+
+(function start() {
     server.listen(config.port, config.host);
     setInterval(mainLoop, timestep * 1000.0);
 
