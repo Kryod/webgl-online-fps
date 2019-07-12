@@ -578,6 +578,7 @@ function resetGame() {
 (function start() {
     server.listen(config.port, config.host);
     setInterval(mainLoop, timestep * 1000.0);
+    setInterval(sendScores, 5000);
 
     var protocol = config.https === false ? "http" : "https";
     console.log(`Server running on ${protocol}://${config.host}:${config.port}`);

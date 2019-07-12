@@ -13,7 +13,7 @@ export default class Scoreboard extends Behaviour {
         $("#score").show();
         NetworkManager.on("scores", this.updateBoard.bind(this));
         NetworkManager.send("request-scores", {});
-        setInterval(this.updateClock.bind(this), 1000);
+        this.clockInterval = null;
     }
 
     update() {
@@ -44,6 +44,11 @@ export default class Scoreboard extends Behaviour {
         this.time = Math.round(scores.time);
         this.refs.$time.text(this.time);
 
+        if (this.clockInterval != null) {
+            clearInterval(this.clockInterval);
+        }
+        this.clockInterval = setInterval(this.updateClock.bind(this), 1000);
+
         for (var teamIdx in scores.teams) {
             var team = scores.teams[teamIdx];
 
@@ -72,6 +77,8 @@ export default class Scoreboard extends Behaviour {
         this.time--;
         if (this.time >= 0) {
             this.refs.$time.text(this.time);
+        } else {
+            this.time = 0;
         }
     }
 }

@@ -367,3 +367,22 @@ body {
     top: 16px;
     left: 16px;
 }
+
+#overlay #log {
+    background-color: rgba(20, 20, 20, 0.6);
+    width: 350px;
+    height: 100px;
+    position: absolute;
+    left: 16px;
+    bottom: 16px;
+    padding: 8px;
+    overflow-y: hidden;
+}
+
+#log .blue {
+    color: #0288D1;
+}
+
+#log .red {
+    color: #E53935;
+}

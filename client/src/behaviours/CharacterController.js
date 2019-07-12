@@ -6,10 +6,14 @@ import NetworkCharacter from "./NetworkCharacter.js";
 var otherCharacters = [];
 
 export default class CharacterController extends Behaviour {
-    constructor(scene, playerId, nickname, skin, isLocalPlayer = true) {
+    constructor(scene, playerId, nickname, team, isLocalPlayer = true) {
         super(scene);
 
-        var fbx = LoaderManager.get(`soldier_${skin}.fbx`);
+        var teams = ["blue", "red"];
+        this.team = team;
+        this.skin = teams[team];
+
+        var fbx = LoaderManager.get(`soldier_${this.skin}.fbx`);
         var model = THREE.SkeletonUtils.clone(fbx);
         model.scale.set(0.117, 0.117, 0.117);
         model.quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0, "XYZ"));
@@ -42,9 +46,9 @@ export default class CharacterController extends Behaviour {
             });
             textGeometry.center();
             var color = 0xffffff;
-            if (skin == "red") {
+            if (this.skin == "red") {
                 color = "rgb(255, 15, 15)";
-            } else if (skin == "blue") {
+            } else if (this.skin == "blue") {
                 color = "rgb(2, 136, 209)";
             }
             var textMesh = new THREE.Mesh(textGeometry, new THREE.MeshBasicMaterial({ "color": color }));
@@ -65,7 +69,7 @@ export default class CharacterController extends Behaviour {
         }
         scene.add(group);
 
-        var rifle = LoaderManager.get(`rifle_${skin}.gltf`).scene.clone();
+        var rifle = LoaderManager.get(`rifle_${this.skin}.gltf`).scene.clone();
         rifle.position.set(-1.0, 0.0, 0.0);
         rifle.scale.set(6.0, 6.0, 6.0);
         rifle.rotation.x = -Math.PI / 2;
@@ -140,22 +144,7 @@ export default class CharacterController extends Behaviour {
             targetPos.y = 2.5;
             otherCharacter.refs.nicknameTextMesh.lookAt(targetPos);
 
-            var myTeam = -1;
-            var otherTeam = -1;
-            if (this.scene.scoreboard.scores != undefined) {
-                for (var teamIdx in this.scene.scoreboard.scores.teams) {
-                    var team = this.scene.scoreboard.scores.teams[teamIdx];
-                    for (var p of team.players) {
-                        if (p.id == this.refs.networkCharacter.playerId) {
-                            myTeam = teamIdx;
-                        }
-                        if (p.id == otherCharacter.refs.networkCharacter.playerId) {
-                            otherTeam = teamIdx;
-                        }
-                    }
-                }
-            }
-            if (myTeam != otherTeam || myTeam == -1) {
+            if (this.team != otherCharacter.team) {
                 var d = otherCharacter.refs.group.position.distanceTo(this.refs.group.position);
                 otherCharacter.refs.nicknameTextMesh.visible = d < 7;
             }

@@ -36,29 +36,14 @@ export default class KillFeed extends Behaviour {
         var teams = ["blue", "red"];
         var killerTeam = 0;
         var killedTeam = 0;
-        for (var teamIdx in this.scores.teams) {
-            for (var player of this.scores.teams[teamIdx].players) {
-                if (player.id == kill.by) {
-                    killerTeam = teamIdx;
-                }
-                if (player.id == kill.killed) {
-                    killedTeam = teamIdx;
-                }
-            }
+
+        if (this.scene.characters.hasOwnProperty(kill.by)) {
+            killer = this.scene.characters[kill.by].nickname;
+            killerTeam = this.scene.characters[kill.by].team;
         }
-
-        for (var id in this.scene.characters) {
-            if (!this.scene.characters.hasOwnProperty(id)) {
-                continue;
-            }
-
-            var character = this.scene.characters[id];
-            if (id == kill.by) {
-                killer = character.nickname;
-            }
-            if (id == kill.killed) {
-                killed = character.nickname;
-            }
+        if (this.scene.characters.hasOwnProperty(kill.killed)) {
+            killed = this.scene.characters[kill.killed].nickname;
+            killedTeam = this.scene.characters[kill.killed].team;
         }
 
         if (killer == "" || killed == "") {
