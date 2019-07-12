@@ -265,6 +265,10 @@ function createPlayerBody(client) {
                 if (projectile.body.id == e.body.id) {
                     if (projectile.from != client.id && client.data.health > 0) {
                         client.data.health -= 20;
+                        state.players[projectile.from].emit("hit", {
+                            "from": projectile.from,
+                            "hit": client.id,
+                        });
                         io.emit("health", {
                             "player": client.id,
                             "value": client.data.health,

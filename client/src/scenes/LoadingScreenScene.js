@@ -56,6 +56,7 @@ export default class LoadingScreenScene extends Scene {
         LoaderManager.queueFbx("./assets/models/crate/crate.fbx");
         LoaderManager.queueAudio("./assets/sounds/hit.mp3");
         LoaderManager.queueAudio("./assets/sounds/shot.mp3");
+        LoaderManager.queueAudio("./assets/sounds/hitmarker.mp3");
 
         LoaderManager.startLoading();
     }

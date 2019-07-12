@@ -43,7 +43,11 @@ export default class NetworkCharacter extends Behaviour {
             this.refs.shotSound = new THREE.Audio(listener);
         }
         this.refs.shotSound.setBuffer(LoaderManager.get("shot.mp3"));
-        this.refs.shotSound.setVolume(0.1);
+        this.refs.shotSound.setVolume(0.2);
+
+        this.refs.hitMarkerSound = new THREE.Audio(listener);
+        this.refs.hitMarkerSound.setBuffer(LoaderManager.get("hitmarker.mp3"));
+        this.refs.hitMarkerSound.setVolume(0.5);
 
         this.lerpProgress = 0.0;
 
@@ -53,6 +57,7 @@ export default class NetworkCharacter extends Behaviour {
         NetworkManager.on("health", this.onHealth.bind(this));
         NetworkManager.on("pong", this.onPong.bind(this));
         NetworkManager.on("shot", this.onShot.bind(this));
+        NetworkManager.on("hit", this.onHit.bind(this));
 
         this.refs.$healthBar.show();
     }
@@ -169,13 +174,25 @@ export default class NetworkCharacter extends Behaviour {
         }
     }
 
-
     onShot(data) {
         if (this.playerId == data.player) {
             if (this.refs.shotSound.isPlaying) {
                 this.refs.shotSound.stop();
             }
             this.refs.shotSound.play();
+        }
+    }
+
+    onHit(data) {
+        if (this.playerId == data.from) {
+            if (this.refs.hitMarkerSound.isPlaying) {
+                this.refs.hitMarkerSound.stop();
+            }
+            this.refs.hitMarkerSound.play();
+            $("#hitmarker").show();
+            setTimeout(function() {
+                $("#hitmarker").fadeOut("fast");
+            }, 100);
         }
     }
 }
