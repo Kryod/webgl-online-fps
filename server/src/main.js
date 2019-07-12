@@ -52,10 +52,16 @@ var scores = {
 var level = levelGenerator.generate();
 
 io.on("connection", client => {
+    var nickname = client.handshake.query.nickname;
+    if (nickname == null || nickname.trim() == "") {
+        nickname = "Guest #" + Math.floor(Math.random() * 10000);
+    }
+    client.emit("nickname", nickname);
     client.data = {
-        "nickname": client.handshake.query.nickname || "",
+        "nickname": nickname,
         "body": createPlayerBody(client),
         "health": 100,
+        "canJump": true,
     };
     state.players[client.id] = client;
     var playerScore = {
@@ -88,14 +94,14 @@ io.on("connection", client => {
 
         var pos = client.data.body.position;
         var newProjectile = Object.create(projectile);
-        newProjectile.pos = new maths.Vector3(pos.x, pos.y - 0.05, pos.z);
+        newProjectile.pos = new maths.Vector3(pos.x, pos.y + 1.9 / 2 - 0.05, pos.z);
         newProjectile.forwardVector = new maths.Vector3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z);
         newProjectile.from = client.id;
         newProjectile.id = idProjectile;
         var body = new cannon.Body({
             "mass": 0.1,
-            "position": new cannon.Vec3(newProjectile.pos.x, newProjectile.pos.y - 0.05, newProjectile.pos.z),
-            "shape": new cannon.Sphere(0.25),
+            "shape": new cannon.Sphere(0.1),
+            "position": new cannon.Vec3(newProjectile.pos.x, newProjectile.pos.y, newProjectile.pos.z),
             "velocity": new cannon.Vec3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z).scale(10),
         });
         world.add(body);
@@ -104,6 +110,15 @@ io.on("connection", client => {
         state.projectiles[idProjectile] = newProjectile;
 
         idProjectile++;
+    });
+
+    client.on("jump", () => {
+        if (!client.data.canJump || client.data.health <= 0.0) {
+            return;
+        }
+
+        client.data.body.velocity.y = 12.5;
+        client.data.canJump = false;
     });
 
     client.on("request-level", () => {
@@ -127,23 +142,31 @@ var world;
 var bodiesToRemove = [];
 function setupPhysics() {
     world = new cannon.World();
-    world.gravity.set(0, -9.81, 0);
     world.quatNormalizeSkip = 0;
     world.quatNormalizeFast = false;
 
     var solver = new cannon.GSSolver();
+
     world.defaultContactMaterial.contactEquationStiffness = 1e9;
     world.defaultContactMaterial.contactEquationRelaxation = 4;
 
     solver.iterations = 7;
     solver.tolerance = 0.1;
-    world.solver = solver;
+    world.solver = new cannon.SplitSolver(solver);
 
+    world.gravity.set(0, -20, 0);
     world.broadphase = new cannon.NaiveBroadphase();
 
-    var mat = new cannon.Material("slipperyMaterial");
-    var contactMat = new cannon.ContactMaterial(mat, mat, 0.0, 0.3);
-    world.addContactMaterial(contactMat);
+    // Create a slippery material (friction coefficient = 0.0)
+    physicsMaterial = new cannon.Material("slipperyMaterial");
+    var physicsContactMaterial = new cannon.ContactMaterial(
+        physicsMaterial,
+        physicsMaterial,
+        0.0, // friction coefficient
+        0.8  // restitution
+    );
+    // We must add the contact materials to the world
+    world.addContactMaterial(physicsContactMaterial);
 
     createGround();
     createBall();
@@ -175,28 +198,49 @@ function createBoxes() {
     }
 }
 
-function createPlayerBody(client) {
+function spawnPlayer(body) {
+    var spawnAreaSize = 40;
+
     function rand(min, max) {
         return Math.random() * (max - min) + min;
     };
 
-    var spawnAreaSize = 40;
+    for (var b of world.bodies) {
+        b.computeAABB();
+    }
+    while (true) {
+        body.position = new cannon.Vec3(rand(-spawnAreaSize / 2, spawnAreaSize / 2), 2, rand(-spawnAreaSize / 2, spawnAreaSize / 2));
+        body.computeAABB();
+        var intersects = false;
+        for (var other of world.bodies) {
+            if (other != body && body.aabb.overlaps(other.aabb)) {
+                intersects = true;
+                break;
+            }
+        }
+        if (!intersects) {
+            break;
+        }
+    }
+}
+
+function createPlayerBody(client) {
     var body = new cannon.Body({
         "mass": 60,
         "linearDamping": 0.95,
         "fixedRotation": true,
-        "position": new cannon.Vec3(rand(-spawnAreaSize / 2, spawnAreaSize / 2), 5, rand(-spawnAreaSize / 2, spawnAreaSize / 2)),
-        "shape": new cannon.Box(new cannon.Vec3(0.5, 1.8, 0.5)),
+        "position": null,
+        "shape": new cannon.Box(new cannon.Vec3(0.65 / 2, 1.9 / 2, 0.4 / 2)),
     });
+    spawnPlayer(body);
     world.add(body);
 
     body.addEventListener("collide", function(e) {
-        var projectileBodyId = e.body.id;
-
+        // Check for collisions with projectiles
         for (var key in state.projectiles) {
-            var projectil = state.projectiles[key];
-            if (projectil.body.id == projectileBodyId) {
-                if (projectil.from != client.id && client.data.health > 0) {
+            var projectile = state.projectiles[key];
+            if (projectile.body.id == e.body.id) {
+                if (projectile.from != client.id && client.data.health > 0) {
                     client.data.health -= 20;
                     io.emit("health", {
                         "player": client.id,
@@ -206,13 +250,13 @@ function createPlayerBody(client) {
                     if (client.data.health <= 0) {
                         var killFeed = {
                             "killed": client.id,
-                            "by": projectil.from,
+                            "by": projectile.from,
                         };
-                        var killerTeam = scores.teams[state.players[projectil.from].data.team];
+                        var killerTeam = scores.teams[state.players[projectile.from].data.team];
                         var killedTeam = scores.teams[client.data.team];
                         killerTeam.score += 10;
                         for (var teamPlayer of killerTeam.players) {
-                            if (teamPlayer.id == projectil.from) {
+                            if (teamPlayer.id == projectile.from) {
                                 teamPlayer.kills++;
                             }
                         }
@@ -228,13 +272,27 @@ function createPlayerBody(client) {
                         io.emit("kill", killFeed);
                         sendScores();
 
-                        respawnTick(client, 10);
+                        respawnTick(client, 5);
                     }
                 }
             }
         }
     });
     return body;
+}
+
+function checkJump(playerData) {
+    var body = playerData.body;
+
+    var from = new cannon.Vec3(body.position.x, body.position.y - 1.9 / 2 - 0.005, body.position.z);
+    var to = new cannon.Vec3(from.x, from.y - 0.25, from.z);
+    var ray = new cannon.Ray(from, to);
+    if (ray.intersectWorld(world, {
+        "mode": cannon.Ray.ANY,
+        "skipBackfaces": false,
+    })) {
+        playerData.canJump = true;
+    }
 }
 
 var ticks = 40;
@@ -258,6 +316,7 @@ function mainLoop() {
         }
 
         var player = state.players[key];
+        checkJump(player.data);
 
         if (player.data.movement != null) {
             var mov = new maths.Vector3(player.data.movement);
@@ -270,6 +329,7 @@ function mainLoop() {
             });
             player.data.body.position.x += mov.x;
             player.data.body.position.z += mov.y;
+            player.data.body.quaternion.setFromEuler(0, -player.data.rotation, 0, "XYZ");
         }
     }
 
@@ -289,6 +349,14 @@ function mainLoop() {
     }
 
     io.emit("state",  stripState());
+
+    if (config.debug === true) {
+        world.bodies.forEach(b => b.computeAABB());
+
+        io.emit("debug", {
+            "aabb": world.bodies.map(b => b.aabb),
+        });
+    }
 }
 
 function respawnTick(client, time) {
@@ -302,8 +370,7 @@ function respawnTick(client, time) {
         }, 1000);
     } else {
         client.data.health = 100;
-        client.data.body.position.x = 0;
-        client.data.body.position.z = 0;
+        spawnPlayer(client.data.body);
         world.add(client.data.body);
         io.emit("health", {
             "player": client.id,
@@ -327,7 +394,7 @@ function stripState() {
         var movement = playerData.movement || new maths.Vector3(0, 0, 0);
         var pos = playerData.body.position;
         stripped.players[key] = {
-            "pos": [ pos.x, pos.y - 1.8, pos.z ],
+            "pos": [ pos.x, pos.y - 1.9 / 2, pos.z ],
             "rot": playerData.rotation,
             "moving": movement.x != 0 || movement.z != 0,
             "nickname": playerData.nickname,

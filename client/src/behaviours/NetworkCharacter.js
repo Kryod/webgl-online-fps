@@ -33,22 +33,28 @@ export default class NetworkCharacter extends Behaviour {
 
             var alive = this.refs.characterController.health > 0.0;
 
-            if (alive && mov != undefined && rot != undefined && (!this.lastMovement.equals(mov) || this.lastRotation != rot)) {
-                NetworkManager.send("input", {
-                    "mov": mov.toArray(),
-                    "rot": rot,
-                });
-                this.lastMovement = mov;
-                this.lastRotation = rot;
-            }
+            if (alive) {
+                if (mov != undefined && rot != undefined && (!this.lastMovement.equals(mov) || this.lastRotation != rot)) {
+                    NetworkManager.send("input", {
+                        "mov": mov.toArray(),
+                        "rot": rot,
+                    });
+                    this.lastMovement = mov;
+                    this.lastRotation = rot;
+                }
 
-            if (alive && InputManager.getButtonDown(InputManager.MOUSE_LEFT_BUTTON)) {
-                var forwardVector = new THREE.Vector3();
-                this.refs.camera.getWorldDirection(forwardVector);
-                forwardVector = forwardVector.multiplyScalar(5);
-                NetworkManager.send("fire", {
-                    "forwardVector": forwardVector,
-                });
+                if (InputManager.getButtonDown(InputManager.MOUSE_LEFT_BUTTON)) {
+                    var forwardVector = new THREE.Vector3();
+                    this.refs.camera.getWorldDirection(forwardVector);
+                    forwardVector = forwardVector.multiplyScalar(5);
+                    NetworkManager.send("fire", {
+                        "forwardVector": forwardVector,
+                    });
+                }
+
+                if (InputManager.getKeyDown(' ')) {
+                    NetworkManager.send("jump", {});
+                }
             }
         }
 

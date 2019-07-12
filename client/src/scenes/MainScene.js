@@ -4,6 +4,7 @@ import NetworkManager from "../NetworkManager.js";
 
 // Behaviours
 import KillFeed from "../behaviours/KillFeed.js";
+import SceneDebug from "../behaviours/SceneDebug.js";
 import Scoreboard from "../behaviours/Scoreboard.js";
 import Projectile from "../behaviours/Projectile.js";
 import LevelLoader from "../behaviours/LevelLoader.js";
@@ -29,6 +30,7 @@ export default class MainScene extends Scene {
     setupScene() {
         this.background = new THREE.Color().setHSL(0.6, 0.0, 1.0);
         this.fog = new THREE.Fog(this.background, 1, 150);
+        this.debug = new SceneDebug(this);
         NetworkManager.on("level", this.onLevelReceived.bind(this));
         NetworkManager.send("request-level", {});
     }

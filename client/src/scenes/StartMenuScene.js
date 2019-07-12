@@ -91,7 +91,7 @@ export default class StartMenuScene extends Scene {
     }
 
     connectToServer() {
-        if (this.connecting === true || this.nickname() === "") {
+        if (this.connecting === true) {
             return;
         }
         this.connecting = true;
@@ -99,7 +99,10 @@ export default class StartMenuScene extends Scene {
 
         var _this = this;
         NetworkManager.connect(function(mngr) {
-            _this.loadMainScene();
+            mngr.on("nickname", function(nickname) {
+                _this.nickname(nickname);
+                _this.loadMainScene();
+            });
         }, function(mngr) {
             _this.connecting = false;
             $("#btn-play").prop("disabled", false);
@@ -119,8 +122,13 @@ export default class StartMenuScene extends Scene {
         });
     }
 
-    nickname() {
-        return $("#startmenu-container .login-form input[name='nickname']").val();
+    nickname(val) {
+        var $el = $("#startmenu-container .login-form input[name='nickname']");
+        if (val !== undefined) {
+            $el.val(val);
+            return;
+        }
+        return $el.val();
     }
 
     openControlsMenu() {

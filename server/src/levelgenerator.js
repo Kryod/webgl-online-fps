@@ -37,11 +37,11 @@ module.exports = {
 
             while (true) {
                 // Generate a new box until we make one that does not collide with the others
+                box.scale = randFloat(1.0, 4.0, 2);
                 box.x = randFloat(-areaSize / 2, areaSize / 2);
-                box.y = 0;
+                box.y = box.scale / 2;
                 box.z = randFloat(-areaSize / 2, areaSize / 2);
                 box.rotation = randFloat(0, 360);
-                box.scale = randFloat(1.0, 4.0, 2);
 
                 var halfExtents = box.scale / 2.0;
                 var body = this.makeBoxBody(box);
