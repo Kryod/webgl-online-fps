@@ -272,12 +272,19 @@ function createPlayerBody(client) {
                                 "killed": client.id,
                                 "by": projectile.from,
                             };
-                            var killerTeam = scores.teams[state.players[projectile.from].data.team];
-                            var killedTeam = scores.teams[client.data.team];
-                            killerTeam.score += 10;
+                            var killerTeamId = state.players[projectile.from].data.team;
+                            var killedTeamId = client.data.team;
+                            var killerTeam = scores.teams[killerTeamId];
+                            var killedTeam = scores.teams[killedTeamId];
+                            var tk = killerTeamId == killedTeamId;
+                            if (tk) {
+                                killerTeam.score -= 10;
+                            } else {
+                                killerTeam.score += 10;
+                            }
                             for (var teamPlayer of killerTeam.players) {
                                 if (teamPlayer.id == projectile.from) {
-                                    teamPlayer.kills++;
+                                    teamPlayer.kills += tk ? -1 : +1;
                                 }
                             }
                             for (var teamPlayer of killedTeam.players) {
@@ -287,6 +294,7 @@ function createPlayerBody(client) {
                             }
 
                             bodiesToRemove.push(body);
+                            client.data.body.position.y = 1;
                             client.data.movement = null;
 
                             io.emit("kill", killFeed);
