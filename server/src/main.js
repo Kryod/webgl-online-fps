@@ -111,6 +111,10 @@ io.on("connection", client => {
         newProjectile.body = body;
         state.projectiles[idProjectile] = newProjectile;
 
+        io.emit("shot", {
+            "player": client.id,
+        });
+
         idProjectile++;
     });
 

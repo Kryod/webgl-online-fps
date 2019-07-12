@@ -23,17 +23,25 @@ export default class NetworkCharacter extends Behaviour {
         var listener = new THREE.AudioListener();
         this.refs.camera.add(listener);
 
-        this.refs.sound = new THREE.PositionalAudio(listener);
-        this.refs.sound.setVolume(this.refs.characterController.isLocalPlayer ? 0.5 : 0.3);
+        this.refs.hitSound = new THREE.PositionalAudio(listener);
+        this.refs.hitSound.setBuffer(LoaderManager.get("hit.mp3"));
+        this.refs.hitSound.setRefDistance(2);
+        this.refs.hitSound.setVolume(0.5);
+        this.refs.characterController.refs.model.add(this.refs.hitSound);
+
+        this.refs.shotSound = new THREE.PositionalAudio(listener);
+        this.refs.shotSound.setBuffer(LoaderManager.get("shot.mp3"));
+        this.refs.shotSound.setRefDistance(2);
+        this.refs.shotSound.setVolume(0.3);
+        this.refs.characterController.refs.model.add(this.refs.shotSound);
 
         this.lerpProgress = 0.0;
-
-        this.refs.characterController.refs.group.add(this.refs.sound);
 
         NetworkManager.on("state", this.onNetworkState.bind(this));
         NetworkManager.on("kill", this.onKill.bind(this));
         NetworkManager.on("respawn", this.onRespawn.bind(this));
         NetworkManager.on("health", this.onHealth.bind(this));
+        NetworkManager.on("shot", this.onShot.bind(this));
 
         this.refs.$healthBar.show();
     }
@@ -136,14 +144,33 @@ export default class NetworkCharacter extends Behaviour {
             }
 
             if (data.value < 100) {
-                var buffer = LoaderManager.get("hit.mp3");
-                if (this.refs.sound.isPlaying) {
-                    this.refs.sound.stop();
+                if (this.refs.hitSound.isPlaying) {
+                    this.refs.hitSound.stop();
                 }
-                this.refs.sound.setBuffer(buffer);
-                this.refs.sound.setRefDistance(20);
-                this.refs.sound.play();
+                if (this.refs.characterController.isLocalPlayer) {
+                    //this.refs.hitSound.setRefDistance(1);
+                } else {
+                    //var dist = this.scene.characters[data.player].refs.group.position.distanceTo(this.refs.characterController.refs.group.position);
+                    //this.refs.hitSound.setRefDistance(dist);
+                }
+                this.refs.hitSound.play();
             }
+        }
+    }
+
+
+    onShot(data) {
+        if (this.playerId == data.player) {
+            if (this.refs.shotSound.isPlaying) {
+                this.refs.shotSound.stop();
+            }
+            if (this.refs.characterController.isLocalPlayer) {
+                //this.refs.shotSound.setRefDistance(1);
+            } else {
+                //var dist = this.scene.characters[data.player].refs.group.position.distanceTo(this.refs.characterController.refs.group.position);
+                //this.refs.shotSound.setRefDistance(dist);
+            }
+            this.refs.shotSound.play();
         }
     }
 }
