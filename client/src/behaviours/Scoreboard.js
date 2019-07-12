@@ -16,6 +16,11 @@ export default class Scoreboard extends Behaviour {
         this.clockInterval = null;
     }
 
+    destroy() {
+        super.destroy();
+        clearInterval(this.clockInterval);
+    }
+
     update() {
         if (InputManager.isPointerLocked()) {
             if (InputManager.getKeyDown("Tab")) {

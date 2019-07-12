@@ -1,4 +1,5 @@
 import Scene from "./Scene.js";
+import SceneManager from "./SceneManager.js";
 import LoaderManager from "../LoaderManager.js";
 import NetworkManager from "../NetworkManager.js";
 
@@ -35,6 +36,7 @@ export default class MainScene extends Scene {
         NetworkManager.on("end", this.onGameEnd.bind(this));
         NetworkManager.on("level", this.onLevelReceived.bind(this));
         NetworkManager.send("request-level", {});
+        NetworkManager.on("disconnect", this.onDisconnected.bind(this));
     }
 
     setupLighting() {
@@ -221,5 +223,27 @@ export default class MainScene extends Scene {
             $("#game-end .draw").show();
         }
         $("#game-end").fadeIn("fast");
+    }
+
+    onDisconnected() {
+        $("#connection-lost").show();
+
+        var _this = this;
+        var retryTime = 5; // Next reconnection try in seconds
+        NetworkManager.connect(function(mngr) {
+            $("#connection-lost").hide();
+
+            mngr.on("nickname", function(nickname) {
+                SceneManager.load(MainScene, {
+                    "nickname": nickname,
+                    "keybindings": _this.keybindings,
+                });
+            });
+        }, function(mngr) {
+            $.snackbar("open", `Could not connect to server...<br>Retrying in ${retryTime} seconds.`, "danger", 2000);
+            setTimeout(_this.onDisconnected.bind(_this), retryTime * 1000);
+        }, {
+            "nickname": this.nickname,
+        });
     }
 }

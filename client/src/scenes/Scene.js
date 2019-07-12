@@ -17,7 +17,9 @@ export default class Scene extends THREE.Scene {
     }
 
     stop() {
-
+        this.behaviours.forEach(behaviour => {
+            behaviour.destroy();
+        });
     }
 
     update(dt) {
