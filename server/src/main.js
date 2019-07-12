@@ -180,7 +180,18 @@ function createGround() {
         "mass": 0,
     });
     body.quaternion.setFromEuler(-Math.PI / 2, 0, 0, "XYZ");
+    body.addEventListener("collide", deleteProjectile);
     world.add(body);
+}
+
+function deleteProjectile(e){
+    for (var key in state.projectiles) {
+        var projectile = state.projectiles[key];
+        if (projectile.body.id == e.body.id) {
+            delete state.projectiles[key];
+            bodiesToRemove.push(projectile.body);
+        }
+    }
 }
 
 function createBall() {
@@ -190,12 +201,15 @@ function createBall() {
         "shape": new cannon.Sphere(0.5),
     });
     world.add(body);
+    body.addEventListener("collide", deleteProjectile);
     state.bodies["ball"] = body;
 }
 
 function createBoxes() {
     for (var box of level.boxes) {
-        world.add(levelGenerator.makeBoxBody(box));
+        var body = levelGenerator.makeBoxBody(box);
+        body.addEventListener("collide", deleteProjectile);
+        world.add(body);
     }
 }
 
@@ -276,6 +290,9 @@ function createPlayerBody(client) {
 
                             respawnTick(client, 5);
                         }
+
+                        delete state.projectiles[key];
+                        bodiesToRemove.push(projectile.body);
                     }
                 }
             }
