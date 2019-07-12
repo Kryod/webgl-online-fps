@@ -100,6 +100,7 @@ io.on("connection", client => {
         newProjectile.forwardVector = new maths.Vector3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z);
         newProjectile.from = client.id;
         newProjectile.id = idProjectile;
+        newProjectile.team = client.data.team;
         var body = new cannon.Body({
             "mass": 0.1,
             "shape": new cannon.Sphere(0.1),
@@ -478,9 +479,11 @@ function stripState() {
             continue;
         }
 
+        var proj = state.projectiles[key];
         stripped.projectiles[key] = {
-            "id": state.projectiles[key].id,
-            "pos": state.projectiles[key].pos,
+            "id": proj.id,
+            "pos": proj.pos,
+            "team": proj.team,
         };
     }
 

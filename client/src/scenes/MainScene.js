@@ -158,7 +158,7 @@ export default class MainScene extends Scene {
             var proj = state.projectiles[id];
             if (!this.projectiles.hasOwnProperty(id)) {
                 //checking in existing projectiles if current one is already spawned
-                this.projectiles[proj.id] = new Projectile(this, proj.pos, new THREE.Vector3(), 0.1, 10, proj.id);
+                this.projectiles[proj.id] = new Projectile(this, proj.id, proj.pos, proj.team, 0.1);
             }
 
             for (var id2 in this.projectiles){
