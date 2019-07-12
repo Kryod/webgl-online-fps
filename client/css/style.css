@@ -343,3 +343,20 @@ body {
 #game-end .team.red {
     color: #E53935;
 }
+
+#overlay #health {
+    background-color: rgba(255, 136, 132, 0.4);
+    border-radius: 4px;
+    width: 30%;
+    height: 24px;
+    top: 90%;
+}
+
+#health .health-bar {
+    position: absolute;
+    border-radius: 4px;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(11, 165, 21, 0.5);
+    transition: width 0.25s ease;
+}
