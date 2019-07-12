@@ -23,17 +23,25 @@ export default class NetworkCharacter extends Behaviour {
         var listener = new THREE.AudioListener();
         this.refs.camera.add(listener);
 
-        this.refs.hitSound = new THREE.PositionalAudio(listener);
+        if (!this.refs.characterController.isLocalPlayer) {
+            this.refs.hitSound = new THREE.PositionalAudio(listener);
+            this.refs.hitSound.setRefDistance(3);
+            this.refs.characterController.refs.model.add(this.refs.hitSound);
+        } else {
+            this.refs.hitSound = new THREE.Audio(listener);
+        }
         this.refs.hitSound.setBuffer(LoaderManager.get("hit.mp3"));
-        this.refs.hitSound.setRefDistance(2);
         this.refs.hitSound.setVolume(0.5);
-        this.refs.characterController.refs.model.add(this.refs.hitSound);
 
-        this.refs.shotSound = new THREE.PositionalAudio(listener);
+        if (!this.refs.characterController.isLocalPlayer) {
+            this.refs.shotSound = new THREE.PositionalAudio(listener);
+            this.refs.shotSound.setRefDistance(3);
+            this.refs.characterController.refs.model.add(this.refs.shotSound);
+        } else {
+            this.refs.shotSound = new THREE.Audio(listener);
+        }
         this.refs.shotSound.setBuffer(LoaderManager.get("shot.mp3"));
-        this.refs.shotSound.setRefDistance(2);
-        this.refs.shotSound.setVolume(0.3);
-        this.refs.characterController.refs.model.add(this.refs.shotSound);
+        this.refs.shotSound.setVolume(0.1);
 
         this.lerpProgress = 0.0;
 
@@ -147,12 +155,6 @@ export default class NetworkCharacter extends Behaviour {
                 if (this.refs.hitSound.isPlaying) {
                     this.refs.hitSound.stop();
                 }
-                if (this.refs.characterController.isLocalPlayer) {
-                    //this.refs.hitSound.setRefDistance(1);
-                } else {
-                    //var dist = this.scene.characters[data.player].refs.group.position.distanceTo(this.refs.characterController.refs.group.position);
-                    //this.refs.hitSound.setRefDistance(dist);
-                }
                 this.refs.hitSound.play();
             }
         }
@@ -163,12 +165,6 @@ export default class NetworkCharacter extends Behaviour {
         if (this.playerId == data.player) {
             if (this.refs.shotSound.isPlaying) {
                 this.refs.shotSound.stop();
-            }
-            if (this.refs.characterController.isLocalPlayer) {
-                //this.refs.shotSound.setRefDistance(1);
-            } else {
-                //var dist = this.scene.characters[data.player].refs.group.position.distanceTo(this.refs.characterController.refs.group.position);
-                //this.refs.shotSound.setRefDistance(dist);
             }
             this.refs.shotSound.play();
         }
