@@ -54,6 +54,7 @@ export default class LoadingScreenScene extends Scene {
         LoaderManager.queueTexture("./assets/models/box/box_normal.png");
         LoaderManager.queueFbx("./assets/models/box/box.fbx");
         LoaderManager.queueFbx("./assets/models/crate/crate.fbx");
+        LoaderManager.queueAudio("./assets/sounds/hit.mp3");
 
         LoaderManager.startLoading();
     }
