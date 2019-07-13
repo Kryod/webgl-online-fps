@@ -12,8 +12,8 @@ var server = null;
 if (config.server.https.enabled === true) {
     const https = require("https");
     server = https.createServer({
-        "key": fs.readFileSync(config.server.https.key),
-        "cert": fs.readFileSync(config.server.https.cert),
+        "key": fs.readFileSync(path.resolve(__dirname + "/..", config.server.https.key)),
+        "cert": fs.readFileSync(path.resolve(__dirname + "/..", config.server.https.cert)),
         "requestCert": false,
         "rejectUnauthorized": false,
     });
