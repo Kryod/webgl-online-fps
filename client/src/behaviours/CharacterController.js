@@ -1,6 +1,7 @@
 import Behaviour from "./Behaviour.js";
 import InputManager from "../InputManager.js";
 import LoaderManager from "../LoaderManager.js";
+import SceneManager from "../scenes/SceneManager.js";
 import NetworkCharacter from "./NetworkCharacter.js";
 
 var otherCharacters = [];
@@ -138,6 +139,8 @@ export default class CharacterController extends Behaviour {
         if (!this.isLocalPlayer) {
             return;
         }
+
+        $("#stats .framerate").text(SceneManager.app.framerate);
 
         for (var otherCharacter of otherCharacters) {
             var targetPos = this.position();

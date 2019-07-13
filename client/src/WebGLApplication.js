@@ -1,5 +1,8 @@
 import InputManager from "./InputManager.js";
 
+const times = [];
+var framerate;
+
 class WebGLApplication {
     constructor(containerElement) {
         this._storedWidth = containerElement.clientWidth;
@@ -24,6 +27,10 @@ class WebGLApplication {
 
     get clientHeight() {
         return this._storedHeight;
+    }
+
+    get framerate() {
+        return framerate;
     }
 
     set activeScene(scene) {
@@ -52,6 +59,13 @@ class WebGLApplication {
     }
 
     animate() {
+        const now = performance.now();
+        while (times.length > 0 && times[0] <= now - 1000) {
+            times.shift();
+        }
+        times.push(now);
+        framerate = times.length;
+
         const dt = this._clock.getDelta();
 
         this._checkDimensions();

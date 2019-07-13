@@ -6,6 +6,10 @@ export default {
         app = newApp;
     },
 
+    get app() {
+        return app;
+    },
+
     load(sceneClass, data = {}) {
         var scene = new sceneClass(app, data);
         if (app != null) {

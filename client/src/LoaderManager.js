@@ -110,7 +110,7 @@ export default {
                 "data": result,
             };
             currentFileIndex++;
-            setTimeout(_this.load.bind(_this), 250);
+            _this.load();
         }, function(xhr) {
             fileProgress(xhr.loaded / xhr.total);
         }, function(err) {

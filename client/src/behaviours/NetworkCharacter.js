@@ -109,7 +109,7 @@ export default class NetworkCharacter extends Behaviour {
 
     onPong(data) {
         if (this.refs.characterController.isLocalPlayer) {
-            $("#ping .value").text(data);
+            $("#stats .latency").text(data);
         }
     }
 

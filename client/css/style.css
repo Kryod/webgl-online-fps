@@ -375,7 +375,7 @@ body {
     transition: width 0.25s ease;
 }
 
-#overlay #scoreboard #ping {
+#overlay #scoreboard #stats {
     position: absolute;
     top: 16px;
     left: 16px;
