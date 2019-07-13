@@ -50,6 +50,7 @@ body {
 #overlay #progress-container {
     width: 50%;
     height: 48px;
+    display: none;
 }
 
 #progress-container .percentage {
@@ -91,6 +92,7 @@ body {
 #overlay #pause-container {
     background-color: rgba(51, 51, 51, 0.6);
     cursor: pointer;
+    display: none;
 }
 
 #pause-container .text {
@@ -121,6 +123,11 @@ body {
          1px -1px 0 #000,
         -1px  1px 0 #000,
          1px  1px 0 #000;
+}
+
+#startmenu-container,
+#startmenu-container .controls {
+    display: none;
 }
 
 #startmenu-container .contents {
@@ -175,6 +182,7 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    display: none;
 }
 
 #kill-feed {
@@ -214,6 +222,7 @@ body {
 
 #overlay #scoreboard {
     background-color: rgba(51, 51, 51, 0.6);
+    display: none;
 }
 
 #scoreboard .contents {
@@ -288,6 +297,7 @@ body {
     transform: translate(-50%, 0%);
     line-height: 48px;
     text-align: center;
+    display: none;
 }
 
 #score .score,
@@ -313,6 +323,7 @@ body {
 
 #overlay #death-screen {
     background-color: rgba(51, 51, 51, 0.6);
+    display: none;
 }
 
 #death-screen .text {
@@ -326,6 +337,7 @@ body {
 
 #overlay #game-end {
     background: none;
+    display: none;
 }
 
 #game-end .text {
@@ -351,6 +363,7 @@ body {
     width: 30%;
     height: 24px;
     top: 90%;
+    display: none;
 }
 
 #health .health-bar {
@@ -377,6 +390,7 @@ body {
     bottom: 16px;
     padding: 8px;
     overflow-y: hidden;
+    display: none;
 }
 
 #log .blue {
@@ -385,6 +399,10 @@ body {
 
 #log .red {
     color: #E53935;
+}
+
+#connection-lost {
+    display: none;
 }
 
 #connection-lost .text {
@@ -400,4 +418,5 @@ body {
     opacity: 0.4;
     width: 100%;
     height: 100%;
+    display: none;
 }
