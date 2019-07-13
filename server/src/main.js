@@ -1,29 +1,29 @@
 const fs = require("fs");
-const config = require("../config");
+const path = require("path");
 const maths = require("math.gl");
 const cannon = require("cannon");
 const util = require("util");
 const levelGenerator = require("./levelgenerator");
 
+var config = null;
+loadConfig();
+
 var server = null;
-if (config.https === false) {
-    const http = require("http");
-    server = http.createServer();
-} else {
+if (config.server.https.enabled === true) {
     const https = require("https");
     server = https.createServer({
-        "key": fs.readFileSync(config.https.key),
-        "cert": fs.readFileSync(config.https.cert),
+        "key": fs.readFileSync(config.server.https.key),
+        "cert": fs.readFileSync(config.server.https.cert),
         "requestCert": false,
-        "rejectUnauthorized": false
+        "rejectUnauthorized": false,
     });
+} else {
+    const http = require("http");
+    server = http.createServer();
 }
 const io = require("socket.io")(server, {
-    "pingInterval": 2000,
+    "pingInterval": config.server.pingInterval,
 });
-
-const ROUND_TIME = 300;
-const ROUND_MAX_SCORE = 250;
 
 const projectile = {
     id: 0,
@@ -48,7 +48,7 @@ var scores = {
             "players": [],
         },
     ],
-    "time": ROUND_TIME,
+    "time": 0,
 };
 var level;
 var world;
@@ -374,7 +374,7 @@ function mainLoop() {
 
     io.emit("state",  stripState());
 
-    if (config.debug === true) {
+    if (config.game.debug === true) {
         world.bodies.forEach(b => b.computeAABB());
 
         io.emit("debug", {
@@ -401,7 +401,7 @@ function mainLoop() {
         if (draw) {
             maxTeam = -1;
         }
-        if (scores.time <= 0.0 || maxScore >= ROUND_MAX_SCORE) {
+        if (scores.time <= 0.0 || maxScore >= config.game.roundMaxScore) {
             state.gameOver = true;
             sendScores();
             io.emit("end", {
@@ -414,6 +414,18 @@ function mainLoop() {
 
 function onPlayerHit(projectile, client) {
     if (client.data.health <= 0) {
+        return;
+    }
+
+    if (state.gameOver) {
+        return;
+    }
+
+    var fromTeamId = state.players[projectile.from].data.team;
+    var victimTeamId = client.data.team;
+    var friendlyFire = fromTeamId == victimTeamId;
+
+    if (friendlyFire && config.game.friendlyFire !== true) {
         return;
     }
 
@@ -432,19 +444,16 @@ function onPlayerHit(projectile, client) {
             "killed": client.id,
             "by": projectile.from,
         };
-        var killerTeamId = state.players[projectile.from].data.team;
-        var killedTeamId = client.data.team;
-        var killerTeam = scores.teams[killerTeamId];
-        var killedTeam = scores.teams[killedTeamId];
-        var tk = killerTeamId == killedTeamId;
-        if (tk) {
+        var killerTeam = scores.teams[fromTeamId];
+        var killedTeam = scores.teams[victimTeamId];
+        if (friendlyFire) {
             killerTeam.score -= 10;
         } else {
             killerTeam.score += 10;
         }
         for (var teamPlayer of killerTeam.players) {
             if (teamPlayer.id == projectile.from) {
-                teamPlayer.kills += tk ? -1 : +1;
+                teamPlayer.kills += friendlyFire ? -1 : +1;
             }
         }
         for (var teamPlayer of killedTeam.players) {
@@ -460,7 +469,7 @@ function onPlayerHit(projectile, client) {
         io.emit("kill", killFeed);
         sendScores();
 
-        respawnTick(client, 5);
+        respawnTick(client, config.game.respawnTime);
     }
 
     delete state.projectiles[projectile.id];
@@ -536,6 +545,8 @@ function sendScores() {
 }
 
 function resetGame() {
+    loadConfig();
+
     state = {
         "players": state.players,
         "bodies": {},
@@ -564,7 +575,7 @@ function resetGame() {
         player.data.body = createPlayerBody(player);
     }
 
-    scores.time = ROUND_TIME;
+    scores.time = config.game.roundTime;
     for (var t of scores.teams) {
         t.score = 0;
         for (var player of t.players) {
@@ -576,10 +587,15 @@ function resetGame() {
 }
 
 (function start() {
-    server.listen(config.port, config.host);
+    server.listen(config.server.port, config.server.host);
     setInterval(mainLoop, timestep * 1000.0);
     setInterval(sendScores, 5000);
 
-    var protocol = config.https === false ? "http" : "https";
-    console.log(`Server running on ${protocol}://${config.host}:${config.port}`);
+    var protocol = config.server.https.enabled === true ? "https" : "http";
+    console.log(`Server running on ${protocol}://${config.server.host}:${config.server.port}`);
 })();
+
+function loadConfig() {
+    var contents = fs.readFileSync(path.resolve(__dirname, "../config.json"));
+    config = JSON.parse(contents);
+}

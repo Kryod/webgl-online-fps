@@ -47,7 +47,7 @@ export default class Scoreboard extends Behaviour {
         var teams = ["blue", "red"];
         this.refs.$board.find("table tbody").empty();
         this.time = Math.round(scores.time);
-        this.refs.$time.text(this.time);
+        this.refs.$time.text(Math.max(this.time, 0));
 
         if (this.clockInterval != null) {
             clearInterval(this.clockInterval);

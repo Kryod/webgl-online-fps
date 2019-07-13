@@ -1,0 +1,19 @@
+{
+    "server": {
+        "https": {
+            "enabled": false,
+            "key": "path/to/key.pem",
+            "cert": "path/to/cert.pem"
+        },
+        "host": "127.0.0.1",
+        "port": 28333,
+        "pingInterval": 2000
+    },
+    "game": {
+        "roundTime": 300,
+        "roundMaxScore": 500,
+        "friendlyFire": true,
+        "respawnTime": 5,
+        "debug": true
+    }
+}

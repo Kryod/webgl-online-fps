@@ -191,6 +191,7 @@ export default class MainScene extends Scene {
     }
 
     onLevelReceived(level) {
+        this.debug.reset();
         this.levelLoader.loadFromObject(level);
 
         if (!this.scoreboard.enabled) {

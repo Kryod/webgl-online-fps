@@ -96,9 +96,14 @@ export default class NetworkCharacter extends Behaviour {
 
         var pos = new THREE.Vector3();
         if (this.prevTarget != undefined && this.nextTarget != undefined) {
-            pos.lerpVectors(this.prevTarget, this.nextTarget, this.lerpProgress / 0.025);
-            this.lerpProgress += dt;
-            this.refs.characterController.position(pos);
+            var dist = this.prevTarget.distanceTo(this.nextTarget);
+            if (dist >= 7.0) {
+                this.refs.characterController.position(this.nextTarget);
+            } else {
+                pos.lerpVectors(this.prevTarget, this.nextTarget, this.lerpProgress / 0.025);
+                this.lerpProgress += dt;
+                this.refs.characterController.position(pos);
+            }
         }
     }
 
@@ -150,11 +155,14 @@ export default class NetworkCharacter extends Behaviour {
             if (this.refs.characterController.isLocalPlayer) {
                 this.refs.$deathScreen.fadeOut("fast");
             }
-            this.refs.characterController.deathAction.stop();
-            this.refs.characterController.walkAction.setEffectiveWeight(0.0);
-            this.refs.characterController.walkAction.play();
-            this.refs.characterController.idleAction.setEffectiveWeight(1.0);
-            this.refs.characterController.idleAction.play();
+            var _this = this;
+            setTimeout(function() {
+                _this.refs.characterController.deathAction.stop();
+                _this.refs.characterController.walkAction.setEffectiveWeight(0.0);
+                _this.refs.characterController.walkAction.play();
+                _this.refs.characterController.idleAction.setEffectiveWeight(1.0);
+                _this.refs.characterController.idleAction.play();
+            }, 30);
         }
     }
 

@@ -31,4 +31,11 @@ export default class SceneDebug extends Behaviour {
             }
         }
     }
+
+    reset() {
+        for (var helper of this.helpers) {
+            this.scene.remove(helper);
+        }
+        this.helpers = [];
+    }
 }
