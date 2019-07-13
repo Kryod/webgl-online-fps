@@ -270,18 +270,42 @@ function createPlayerBody(client) {
     return body;
 }
 
-function checkJump(playerData) {
-    var body = playerData.body;
-
-    var from = new cannon.Vec3(body.position.x, body.position.y - 1.9 / 2 - 0.005, body.position.z);
-    var to = new cannon.Vec3(from.x, from.y - 0.25, from.z);
-    var ray = new cannon.Ray(from, to);
-    if (ray.intersectWorld(world, {
-        "mode": cannon.Ray.ANY,
-        "skipBackfaces": false,
-    })) {
-        playerData.canJump = true;
+function checkJump(player) {
+    if (player.data.canJump) {
+        // No need to check if the player can already jump
+        return;
     }
+
+    var body = player.data.body;
+
+    var from = new cannon.Vec3(body.position.x, body.position.y - 1.9 / 2 + 0.005, body.position.z);
+    var to = new cannon.Vec3(from.x, from.y + 0.25, from.z);
+    var ray = new cannon.Ray(from, to);
+    var bodies = Array.from(world.bodies);
+    bodies.filter(b => b.id != body.id);
+    var result = new cannon.RaycastResult();
+    ray.intersectBodies(bodies, result);
+    if (result.hasHit) {
+        player.data.canJump = true;
+    }
+}
+
+function playerMovement(player, dt) {
+    if (player.data.movement == null) {
+        return;
+    }
+
+    var mov = new maths.Vector3(player.data.movement);
+    mov.scale(4.0);
+    mov.scale(dt);
+
+    mov = new maths.Vector3(mov.x, mov.z, 0);
+    mov.rotateZ({
+        "radians": -player.data.rotation,
+    });
+    player.data.body.position.x += mov.x;
+    player.data.body.position.z += mov.y;
+    player.data.body.quaternion.setFromEuler(0, -player.data.rotation, 0, "XYZ");
 }
 
 var ticks = 40;
@@ -339,21 +363,8 @@ function mainLoop() {
         }
 
         var player = state.players[key];
-        checkJump(player.data);
-
-        if (player.data.movement != null) {
-            var mov = new maths.Vector3(player.data.movement);
-            mov.scale(4.0);
-            mov.scale(dt);
-
-            mov = new maths.Vector3(mov.x, mov.z, 0);
-            mov.rotateZ({
-                "radians": -player.data.rotation,
-            });
-            player.data.body.position.x += mov.x;
-            player.data.body.position.z += mov.y;
-            player.data.body.quaternion.setFromEuler(0, -player.data.rotation, 0, "XYZ");
-        }
+        checkJump(player);
+        playerMovement(player, dt);
     }
 
     // Remove old projectiles
