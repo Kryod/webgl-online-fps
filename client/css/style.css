@@ -395,3 +395,9 @@ body {
     transform: translate(-50%, -50%);
     font-size: 2.5em;
 }
+
+#damagescreen {
+    opacity: 0.4;
+    width: 100%;
+    height: 100%;
+}
