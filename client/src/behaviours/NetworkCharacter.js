@@ -178,12 +178,13 @@ export default class NetworkCharacter extends Behaviour {
                     this.refs.hitSound.stop();
                 }
                 this.refs.hitSound.play();
-				if (this.refs.characterController.isLocalPlayer) {
-                $("#damagescreen").show();
-                setTimeout(function() {
-                    $("#damagescreen").fadeOut("fast");
-                }, 100);
-            }
+
+                if (this.refs.characterController.isLocalPlayer) {
+                    $("#damagescreen").show();
+                    setTimeout(function() {
+                        $("#damagescreen").fadeOut("fast");
+                    }, 100);
+                }
             }
         }
     }
