@@ -171,10 +171,6 @@ export default class NetworkCharacter extends Behaviour {
             this.refs.characterController.health = data.value;
             if (this.refs.characterController.isLocalPlayer) {
                 this.refs.$healthBar.find(".health-bar").css("width", data.value + "%");
-				$("#damagescreen").show();
-				setTimeout(function() {
-					$("#damagescreen").fadeOut("fast");
-				}, 100);
             }
 
             if (data.value < 100) {
@@ -182,6 +178,12 @@ export default class NetworkCharacter extends Behaviour {
                     this.refs.hitSound.stop();
                 }
                 this.refs.hitSound.play();
+				if (this.refs.characterController.isLocalPlayer) {
+                $("#damagescreen").show();
+                setTimeout(function() {
+                    $("#damagescreen").fadeOut("fast");
+                }, 100);
+            }
             }
         }
     }
