@@ -88,7 +88,7 @@ export default class NetworkCharacter extends Behaviour {
                     });
                 }
 
-                if (InputManager.getKeyDown(' ')) {
+                if (InputManager.getKey(this.refs.characterController.keybindings["Jump"])) {
                     NetworkManager.send("jump", {});
                 }
             }

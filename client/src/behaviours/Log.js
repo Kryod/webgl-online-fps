@@ -9,7 +9,7 @@ export default class Log extends Behaviour {
     writeLine(line) {
         var $el = $("#log");
         $el.append(line + "<br>");
-        $el[0].scrollTop = $el[0].scrollHeight;
+        $el[0].scrollTop = $el[0].clientHeight;
         this.$log.show();
 
         if (this.closeCallback != null) {
