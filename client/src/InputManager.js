@@ -9,7 +9,12 @@ var onPointerLockedCallbacks = [];
 var onPointerUnlockedCallbacks = [];
 
 $(document).on("keydown", function(e) {
-    keysDown[e.key] = true;
+    var realKey = e.key;
+    if(e.shiftKey && e.key !== "Shift")
+    {
+        realKey = String.fromCharCode(realKey.charCodeAt(0) + 32);
+    }
+    keysDown[realKey] = true;
 
     if (pointerLocked && e.key == "Tab") {
         return false;
@@ -17,7 +22,12 @@ $(document).on("keydown", function(e) {
 });
 
 $(document).on("keyup", function(e) {
-    keysDown[e.key] = false;
+    var realKey = e.key;
+    if(e.shiftKey && e.key !== "Shift")
+    {
+        realKey = String.fromCharCode(realKey.charCodeAt(0) + 32);
+    }
+    keysDown[realKey] = false;
 });
 
 document.addEventListener("mousemove", function(e) {
