@@ -212,14 +212,13 @@ export default class MainScene extends Scene {
     onGameEnd(data) {
         this.scoreboard.show();
         this.scoreboard.enabled = false;
-        var team = "blue";
-        $("#game-end .win .team").text(team.toUpperCase()).removeClass(team);
-        var team2 = "red";
-        $("#game-end .win .team").text(team.toUpperCase()).removeClass(team);
 
         if (data.team != -1) {
             var teams = ["blue", "red"];
-            team = teams[data.team];
+            for (var t of teams) {
+                $("#game-end .win .team").removeClass(t);
+            }
+            var team = teams[data.team];
             $("#game-end .win .team").text(team.toUpperCase()).addClass(team);
             $("#game-end .draw").hide();
             $("#game-end .win").show();

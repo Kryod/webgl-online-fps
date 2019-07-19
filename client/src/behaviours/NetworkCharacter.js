@@ -58,6 +58,7 @@ export default class NetworkCharacter extends Behaviour {
         NetworkManager.on("pong", this.onPong.bind(this));
         NetworkManager.on("shot", this.onShot.bind(this));
         NetworkManager.on("hit", this.onHit.bind(this));
+        NetworkManager.on("player-team", this.onPlayerTeam.bind(this));
 
         this.refs.$healthBar.show();
     }
@@ -208,6 +209,12 @@ export default class NetworkCharacter extends Behaviour {
             setTimeout(function() {
                 $("#hitmarker").fadeOut("fast");
             }, 100);
+        }
+    }
+
+    onPlayerTeam(data) {
+        if (this.playerId == data.player) {
+            this.refs.characterController.instantiate(data.team);
         }
     }
 }

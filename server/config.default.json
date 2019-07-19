@@ -14,6 +14,7 @@
         "roundMaxScore": 500,
         "friendlyFire": true,
         "respawnTime": 5,
-        "debug": false
+        "debug": false,
+        "gameResetTime": 15
     }
 }

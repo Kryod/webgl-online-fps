@@ -418,7 +418,7 @@ function mainLoop() {
             io.emit("end", {
                 "team": maxTeam,
             });
-            setTimeout(resetGame, 10000);
+            setTimeout(resetGame, config.game.gameResetTime * 1000);
         }
     }
 }
@@ -558,6 +558,7 @@ function sendScores() {
 function resetGame() {
     loadConfig();
 
+    // Reset state
     state = {
         "players": state.players,
         "bodies": {},
@@ -570,6 +571,7 @@ function resetGame() {
     io.emit("level", level);
     setupPhysics();
 
+    // Reset players
     for (var id in state.players) {
         if (!state.players.hasOwnProperty(id)) {
             continue;
@@ -586,13 +588,30 @@ function resetGame() {
         player.data.body = createPlayerBody(player);
     }
 
+    // Rebalance teams
+    for (var t of scores.teams) {
+        t.players = [];
+    }
+    var team = 0;
+    Object.entries(state.players).forEach(function(d) {
+        var player = d[1];
+        player.team = team;
+        scores.teams[team].players.push({
+            "id": player.id,
+            "kills": 0,
+            "deaths": 0,
+        });
+        io.emit("player-team", {
+            "player": player.id,
+            "team": team,
+        });
+        team = team == 0 ? 1 : 0;
+    });
+
+    // Reset scores
     scores.time = config.game.roundTime;
     for (var t of scores.teams) {
         t.score = 0;
-        for (var player of t.players) {
-            player.kills = 0;
-            player.deaths = 0;
-        }
     }
     sendScores();
 }

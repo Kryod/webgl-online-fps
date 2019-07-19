@@ -10,9 +10,25 @@ export default class CharacterController extends Behaviour {
     constructor(scene, playerId, nickname, team, isLocalPlayer = true) {
         super(scene);
 
+        this.nickname = nickname;
+        this.isLocalPlayer = isLocalPlayer === true;
+        this.refs.camera = scene.camera;
+
+        this.instantiate(team);
+
+        this.refs.networkCharacter = new NetworkCharacter(scene, playerId, this, this.refs.camera);
+        this.keybindings = scene.keybindings;
+        this.health = 100.0;
+    }
+
+    instantiate(team) {
         var teams = ["blue", "red"];
         this.team = team;
         this.skin = teams[team];
+
+        if (this.refs.model !== undefined) {
+            this.scene.remove(this.refs.group);
+        }
 
         var fbx = LoaderManager.get(`soldier_${this.skin}.fbx`);
         var model = THREE.SkeletonUtils.clone(fbx);
@@ -35,12 +51,12 @@ export default class CharacterController extends Behaviour {
         modelRotOffset.rotation.y = Math.PI / 2;
         modelRotOffset.add(model);
         group.add(modelRotOffset);
-        if (isLocalPlayer) {
-            group.add(scene.camera);
-            scene.camera.position.set(0, 1.75, 0);
+        if (this.isLocalPlayer) {
+            group.add(this.scene.camera);
+            this.scene.camera.position.set(0, 1.75, 0);
         } else {
             var font = LoaderManager.get("lato.json");
-            var textGeometry = new THREE.TextGeometry(nickname, {
+            var textGeometry = new THREE.TextGeometry(this.nickname, {
                 "font": font,
                 "size": 50,
                 "height": 1,
@@ -68,7 +84,7 @@ export default class CharacterController extends Behaviour {
 
             otherCharacters.push(this);
         }
-        scene.add(group);
+        this.scene.add(group);
 
         var rifle = LoaderManager.get(`rifle_${this.skin}.gltf`).scene.clone();
         rifle.position.set(-1.0, 0.0, 0.0);
@@ -78,8 +94,12 @@ export default class CharacterController extends Behaviour {
         var rightHand = model.children[0].children[1].children[2].children[0].children[0].children[0].children[0].children[0].children[0];
         rightHand.add(rifle);
 
-        this.mixer = new THREE.AnimationMixer(model);
+        this.refs.model = model;
+        this.refs.group = group;
+
+        this.mixer = new THREE.AnimationMixer(this.refs.model);
         this.clips = [];
+        var fbx = LoaderManager.get(`soldier_${this.skin}.fbx`);
         for (var anim of fbx.animations) {
             this.clips.push(anim.clone());
         }
@@ -97,16 +117,6 @@ export default class CharacterController extends Behaviour {
         this.deathAction = this.mixer.clipAction(clip);
         this.deathAction.setLoop(THREE.LoopOnce);
         this.deathAction.clampWhenFinished = true;
-
-        this.refs.model = model;
-        this.refs.group = group;
-        this.refs.camera = scene.camera;
-
-        this.isLocalPlayer = isLocalPlayer === true;
-        this.nickname = nickname;
-        this.refs.networkCharacter = new NetworkCharacter(scene, playerId, this, this.refs.camera);
-        this.keybindings = scene.keybindings;
-        this.health = 100.0;
     }
 
     start() {
