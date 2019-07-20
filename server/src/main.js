@@ -53,6 +53,7 @@ var scores = {
 var level;
 var world;
 var idProjectile;
+var emptyRoomResetTimeout;
 resetGame();
 
 io.on("connection", client => {
@@ -153,7 +154,15 @@ io.on("connection", client => {
             team.players = team.players.filter(player => player.id != client.id);
         }
         sendScores();
+
+        if (Object.entries(state.players).length == 0) {
+            emptyRoomResetTimeout = setTimeout(resetGame, config.game.emptyRoomResetTime * 1000);
+        }
     });
+
+    if (emptyRoomResetTimeout != null) {
+        clearTimeout(emptyRoomResetTimeout);
+    }
 });
 
 var bodiesToRemove = [];
@@ -317,7 +326,7 @@ function mainLoop() {
     var dt = (now - lastUpdate) / 1000.0;
     lastUpdate = now;
 
-    if (scores.teams.reduce((n, t) => n + t.players.length, 0) > 0) {
+    if (Object.entries(state.players).length > 0) {
         // Pass time while at least one player is connected
         scores.time -= dt;
     }

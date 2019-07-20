@@ -15,6 +15,7 @@
         "friendlyFire": true,
         "respawnTime": 5,
         "debug": false,
-        "gameResetTime": 15
+        "gameResetTime": 15,
+        "emptyRoomResetTime": 600
     }
 }
