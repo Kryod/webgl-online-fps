@@ -2,7 +2,8 @@ const fs = require("fs");
 const path = require("path");
 const maths = require("math.gl");
 const cannon = require("cannon");
-const util = require("util");
+const Player = require("./Player.js");
+const Projectile = require("./Projectile.js");
 const levelGenerator = require("./levelgenerator");
 
 var config = null;
@@ -25,15 +26,6 @@ const io = require("socket.io")(server, {
     "pingInterval": config.server.pingInterval,
 });
 
-const projectile = {
-    id: 0,
-    pos: 0,
-    forwardVector: new maths.Vector3(0, 0, 0),
-    timer: 0,
-    from: 0,
-    body: undefined,
-};
-
 var state = {
     "players": {},
 };
@@ -52,7 +44,6 @@ var scores = {
 };
 var level;
 var world;
-var idProjectile;
 var emptyRoomResetTimeout;
 resetGame();
 
@@ -62,13 +53,7 @@ io.on("connection", client => {
         nickname = "Guest #" + Math.floor(Math.random() * 10000);
     }
     client.emit("nickname", nickname);
-    client.data = {
-        "nickname": nickname,
-        "body": createPlayerBody(client),
-        "health": 100,
-        "canJump": true,
-        "lastShot": null,
-    };
+    client.data = new Player(nickname, world);
     state.players[client.id] = client;
     var playerScore = {
         "id": client.id,
@@ -97,38 +82,22 @@ io.on("connection", client => {
         if (client.data.health <= 0.0) {
             return;
         }
-        if (client.data.lastShot != null) {
-            var dt = Date.now() - client.data.lastShot;
-            if (dt < 200) {
-                return;
-            }
+        if (client.data.timeSinceLastShot() < 200) {
+            return;
         }
 
         var pos = client.data.body.position;
-        var newProjectile = Object.create(projectile);
-        newProjectile.pos = new maths.Vector3(pos.x, pos.y + 1.9 / 2 - 0.05, pos.z);
-        newProjectile.forwardVector = new maths.Vector3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z);
-        newProjectile.from = client.id;
-        newProjectile.id = idProjectile;
-        newProjectile.team = client.data.team;
-        var body = new cannon.Body({
-            "mass": 0.1,
-            "shape": new cannon.Sphere(0.1),
-            "position": new cannon.Vec3(newProjectile.pos.x, newProjectile.pos.y, newProjectile.pos.z),
-            "velocity": new cannon.Vec3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z).scale(15),
-            "linearDamping": 0.3,
-        });
-        world.add(body);
-        body.collisionResponse = 0;
-        newProjectile.body = body;
-        state.projectiles[idProjectile] = newProjectile;
+        pos = new maths.Vector3(pos.x, pos.y + 1.9 / 2 - 0.05, pos.z);
+        var forwardVector = new maths.Vector3(data.forwardVector.x, data.forwardVector.y, data.forwardVector.z)
+        var projectile = new Projectile(pos, forwardVector, world);
+        projectile.team = client.data.team;
+        projectile.from = client.id;
+        state.projectiles[projectile.id] = projectile;
 
         io.emit("shot", {
             "player": client.id,
         });
-        client.data.lastShot = Date.now();
-
-        idProjectile++;
+        client.data.shoot(); // This resets the cooldown
     });
 
     client.on("jump", () => {
@@ -136,8 +105,7 @@ io.on("connection", client => {
             return;
         }
 
-        client.data.body.velocity.y = 12.5;
-        client.data.canJump = false;
+        client.data.jump();
     });
 
     client.on("request-level", () => {
@@ -239,82 +207,12 @@ function createBoxes() {
     }
 }
 
-function spawnPlayer(body) {
-    var spawnAreaSize = 40;
-
-    function rand(min, max) {
-        return Math.random() * (max - min) + min;
-    };
-
-    for (var b of world.bodies) {
-        b.computeAABB();
-    }
-    while (true) {
-        body.position = new cannon.Vec3(rand(-spawnAreaSize / 2, spawnAreaSize / 2), 2, rand(-spawnAreaSize / 2, spawnAreaSize / 2));
-        body.computeAABB();
-        var intersects = false;
-        for (var other of world.bodies) {
-            if (other != body && body.aabb.overlaps(other.aabb)) {
-                intersects = true;
-                break;
-            }
-        }
-        if (!intersects) {
-            break;
-        }
-    }
-}
-
-function createPlayerBody(client) {
-    var body = new cannon.Body({
-        "mass": 60,
-        "linearDamping": 0.95,
-        "fixedRotation": true,
-        "position": null,
-        "shape": new cannon.Box(new cannon.Vec3(0.6 / 2, 1.9 / 2, 0.4 / 2)),
-    });
-    spawnPlayer(body);
-    world.add(body);
-
-    return body;
-}
-
-function checkJump(player) {
-    if (player.data.canJump) {
-        // No need to check if the player can already jump
-        return;
-    }
-
-    var body = player.data.body;
-
-    var from = new cannon.Vec3(body.position.x, body.position.y - 1.9 / 2 + 0.005, body.position.z);
-    var to = new cannon.Vec3(from.x, from.y + 0.25, from.z);
-    var ray = new cannon.Ray(from, to);
-    var bodies = Array.from(world.bodies);
-    bodies.filter(b => b.id != body.id);
-    var result = new cannon.RaycastResult();
-    ray.intersectBodies(bodies, result);
-    if (result.hasHit) {
-        player.data.canJump = true;
-    }
-}
-
 function playerMovement(player, dt) {
     if (player.data.movement == null) {
         return;
     }
 
-    var mov = new maths.Vector3(player.data.movement);
-    mov.scale(4.0);
-    mov.scale(dt);
-
-    mov = new maths.Vector3(mov.x, mov.z, 0);
-    mov.rotateZ({
-        "radians": -player.data.rotation,
-    });
-    player.data.body.position.x += mov.x;
-    player.data.body.position.z += mov.y;
-    player.data.body.quaternion.setFromEuler(0, -player.data.rotation, 0, "XYZ");
+    player.data.move(new maths.Vector3(player.data.movement), dt);
 }
 
 var ticks = 40;
@@ -345,22 +243,10 @@ function mainLoop() {
                 continue;
             }
             var proj = state.projectiles[projId];
-            var from = proj.body.position.clone();
-            var to = from.clone().vadd(proj.body.velocity.clone());
-            var ray = new cannon.Ray(from, to);
-            var result = new cannon.RaycastResult();
-            ray.intersectBodies(playerBodies, result);
-            if (result.hasHit && result.distance < proj.body.velocity.length() / ticks) {
-                var playerHit = null;
-                Object.entries(state.players).forEach(function(d) {
-                    var player = d[1];
-                    if (player.data.body.id == result.body.id) {
-                        playerHit = player;
-                    }
-                });
-                if (playerHit != null && result.body != state.players[proj.from].data.body) {
-                    onPlayerHit(proj, playerHit);
-                }
+            var hitBody = proj.checkCollisions(playerBodies, ticks);
+            if (hitBody != null && hitBody.id != state.players[proj.from].data.body.id) {
+                var player = Object.entries(state.players).find(entry => entry[1].data.body.id == hitBody.id)[1];
+                onPlayerHit(proj, player);
             }
         }
     }
@@ -372,7 +258,7 @@ function mainLoop() {
         }
 
         var player = state.players[key];
-        checkJump(player);
+        player.data.checkJump(world);
         playerMovement(player, dt);
     }
 
@@ -483,8 +369,7 @@ function onPlayerHit(projectile, client) {
         }
 
         bodiesToRemove.push(client.data.body);
-        client.data.body.position.y = 1;
-        client.data.movement = null;
+        client.data.die();
 
         io.emit("kill", killFeed);
         sendScores();
@@ -506,9 +391,7 @@ function respawnTick(client, time) {
             respawnTick(client, time - 1);
         }, 1000);
     } else {
-        client.data.health = 100;
-        spawnPlayer(client.data.body);
-        world.add(client.data.body);
+        client.data.respawn(world);
         io.emit("health", {
             "player": client.id,
             "value": client.data.health,
@@ -527,16 +410,7 @@ function stripState() {
             continue;
         }
 
-        var playerData = state.players[key].data;
-        var movement = playerData.movement || new maths.Vector3(0, 0, 0);
-        var pos = playerData.body.position;
-        stripped.players[key] = {
-            "pos": [ pos.x, pos.y - 1.9 / 2, pos.z ],
-            "rot": playerData.rotation,
-            "moving": movement.x != 0 || movement.z != 0,
-            "nickname": playerData.nickname,
-            "team": playerData.team,
-        };
+        stripped.players[key] = state.players[key].data.strip();
     }
 
     {
@@ -544,17 +418,9 @@ function stripState() {
         stripped["ball"] = [ pos.x, pos.y, pos.z ];
     }
 
-    for (var key in state.projectiles) {
-        if (!state.projectiles.hasOwnProperty(key)) {
-            continue;
-        }
-
-        var proj = state.projectiles[key];
-        stripped.projectiles[key] = {
-            "id": proj.id,
-            "pos": proj.pos,
-            "team": proj.team,
-        };
+    for (var pair of Object.entries(state.projectiles)) {
+        var proj = pair[1];
+        stripped.projectiles[proj.id] = proj.strip();
     }
 
     return stripped;
@@ -574,7 +440,6 @@ function resetGame() {
         "projectiles": {},
         "gameOver": false,
     };
-    idProjectile = 0;
     bodiesToRemove = [];
     level = levelGenerator.generate();
     io.emit("level", level);
@@ -587,14 +452,11 @@ function resetGame() {
         }
 
         var player = state.players[id];
-        player.data.health = 100;
+        player.data.respawn(world);
         io.emit("health", {
             "player": id,
             "value": player.data.health,
         });
-        player.data.canJump = true;
-        player.data.lastShot = null;
-        player.data.body = createPlayerBody(player);
     }
 
     // Rebalance teams
