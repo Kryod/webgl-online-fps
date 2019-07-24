@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const maths = require("math.gl");
 const cannon = require("cannon");
+const State = require("./State.js");
 const Player = require("./Player.js");
 const Projectile = require("./Projectile.js");
 const levelGenerator = require("./levelgenerator");
@@ -26,9 +27,7 @@ const io = require("socket.io")(server, {
     "pingInterval": config.server.pingInterval,
 });
 
-var state = {
-    "players": {},
-};
+var state = new State();
 var scores = {
     "teams": [
         {
@@ -123,7 +122,7 @@ io.on("connection", client => {
         }
         sendScores();
 
-        if (Object.entries(state.players).length == 0) {
+        if (state.getPlayersArray().length == 0) {
             emptyRoomResetTimeout = setTimeout(resetGame, config.game.emptyRoomResetTime * 1000);
         }
     });
@@ -178,11 +177,10 @@ function createGround() {
 }
 
 function deleteProjectile(e) {
-    for (var key in state.projectiles) {
-        var projectile = state.projectiles[key];
-        if (projectile.body.id == e.body.id) {
-            delete state.projectiles[key];
-            bodiesToRemove.push(projectile.body);
+    for (var proj of state.getProjectilesArray()) {
+        if (proj.body.id == e.body.id) {
+            delete state.projectiles[proj.id];
+            bodiesToRemove.push(proj.body);
         }
     }
 }
@@ -224,7 +222,7 @@ function mainLoop() {
     var dt = (now - lastUpdate) / 1000.0;
     lastUpdate = now;
 
-    if (Object.entries(state.players).length > 0) {
+    if (state.getPlayersArray().length > 0) {
         // Pass time while at least one player is connected
         scores.time -= dt;
     }
@@ -236,49 +234,35 @@ function mainLoop() {
     world.step(dt);
 
     // Check players-projectiles collisions
-    var playerBodies = Object.entries(state.players).map(entry => entry[1].data.body);
+    var playerBodies = state.getPlayersArray().map(p => p.data.body);
     if (playerBodies.length > 0) {
-        for (var projId in state.projectiles) {
-            if (!state.projectiles.hasOwnProperty(projId)) {
-                continue;
-            }
-            var proj = state.projectiles[projId];
+        for (var proj of state.getProjectilesArray()) {
             var hitBody = proj.checkCollisions(playerBodies, ticks);
             if (hitBody != null && hitBody.id != state.players[proj.from].data.body.id) {
-                var player = Object.entries(state.players).find(entry => entry[1].data.body.id == hitBody.id)[1];
+                var player = state.getPlayersArray().find(p => p.data.body.id == hitBody.id);
                 onPlayerHit(proj, player);
             }
         }
     }
 
     // Handle player movement and jumps
-    for (var key in state.players) {
-        if (!state.players.hasOwnProperty(key)) {
-            continue;
-        }
-
-        var player = state.players[key];
+    for (var player of state.getPlayersArray()) {
         player.data.checkJump(world);
         playerMovement(player, dt);
     }
 
     // Remove old projectiles
-    for (var key in state.projectiles) {
-        if (!state.projectiles.hasOwnProperty(key)) {
-            continue;
-        }
-        var proj = state.projectiles[key];
-
+    for (var proj of state.getProjectilesArray()) {
         proj.timer += dt;
         if (proj.timer >= 6.0) {
-            delete state.projectiles[key];
+            delete state.projectiles[proj.id];
             bodiesToRemove.push(proj.body);
             continue;
         }
         proj.pos = proj.body.position;
     }
 
-    io.emit("state",  stripState());
+    io.emit("state",  state.strip());
 
     if (config.game.debug === true) {
         world.bodies.forEach(b => b.computeAABB());
@@ -399,33 +383,6 @@ function respawnTick(client, time) {
     }
 }
 
-function stripState() {
-    var stripped = {
-        "players": {},
-        "projectiles": {},
-    };
-
-    for (var key in state.players) {
-        if (!state.players.hasOwnProperty(key)) {
-            continue;
-        }
-
-        stripped.players[key] = state.players[key].data.strip();
-    }
-
-    {
-        var pos = state.bodies["ball"].position;
-        stripped["ball"] = [ pos.x, pos.y, pos.z ];
-    }
-
-    for (var pair of Object.entries(state.projectiles)) {
-        var proj = pair[1];
-        stripped.projectiles[proj.id] = proj.strip();
-    }
-
-    return stripped;
-}
-
 function sendScores() {
     io.emit("scores", scores);
 }
@@ -434,27 +391,17 @@ function resetGame() {
     loadConfig();
 
     // Reset state
-    state = {
-        "players": state.players,
-        "bodies": {},
-        "projectiles": {},
-        "gameOver": false,
-    };
+    state.reset();
     bodiesToRemove = [];
     level = levelGenerator.generate();
     io.emit("level", level);
     setupPhysics();
 
     // Reset players
-    for (var id in state.players) {
-        if (!state.players.hasOwnProperty(id)) {
-            continue;
-        }
-
-        var player = state.players[id];
+    for (var player of state.getPlayersArray()) {
         player.data.respawn(world);
         io.emit("health", {
-            "player": id,
+            "player": player.id,
             "value": player.data.health,
         });
     }
@@ -464,8 +411,7 @@ function resetGame() {
         t.players = [];
     }
     var team = 0;
-    Object.entries(state.players).forEach(function(d) {
-        var player = d[1];
+    for (var player of state.getPlayersArray()) {
         player.team = team;
         scores.teams[team].players.push({
             "id": player.id,
@@ -477,7 +423,7 @@ function resetGame() {
             "team": team,
         });
         team = team == 0 ? 1 : 0;
-    });
+    }
 
     // Reset scores
     scores.time = config.game.roundTime;
