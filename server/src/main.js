@@ -273,11 +273,11 @@ function mainLoop() {
     }
 
     if (!state.gameOver) {
-        var maxScore = 0;
+        var maxScore = null;
         var maxTeam = -1;
         for (var idx in scores.teams) {
             var t = scores.teams[idx];
-            if (t.score > maxScore) {
+            if (maxScore == null || t.score > maxScore) {
                 maxScore = t.score;
                 maxTeam = idx;
             }
