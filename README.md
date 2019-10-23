@@ -1,15 +1,15 @@
-# Projet Programmation WebGL / Programmation réseau
+# WebGL Online FPS
 
-### Mise en place du projet
+### Installation
 
-Dans le dossier `server`, copier le fichier `config.default.json` vers `config.json`.
+In the `server` directory, copy `config.default.json` to `config.json`.
 
-Dans le dossier `client`, copier le fichier `config.default.js` vers `config.js`.
+In the `client` directory, copy `config.default.js` to `config.js`.
 
 
-Placer le dossier `client` dans le dossier de votre serveur web.
+Serve the `client` directory with your favourite web server.
 
-Dans un terminal, exécuter le serveur avec
+Run the server with
 ```sh
 $ cd server/
 $ node src/main.js
